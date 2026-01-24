@@ -57,5 +57,15 @@
     "edu.wpi.first.math.**.proto.*",
     "edu.wpi.first.math.**.struct.*",
   ],
-  "java.dependency.enableDependencyCheckup": false
+  "java.dependency.enableDependencyCheckup": false,
+  "editor.renderLineHighlight": "all",
+  "editor.renderLineHighlightOnlyWhenFocus": false,
+  "editor.cursorBlinking": "solid",
+  "editor.autoClosingOvertype": "never",
+  "diffEditor.renderIndicators": false,
+  "editor.colorDecorators": false,
+  "editor.cursorStyle": "line",
+  "editor.cursorWidth": 0,
+  "editor.overtypeCursorStyle": "line",
+  "editor.overtypeOnPaste": false
 }
