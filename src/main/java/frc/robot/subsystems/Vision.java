@@ -100,7 +100,7 @@ public class Vision extends SubsystemBase {
         dy += mEstimatedRobotPose.get().estimatedPose.getY();
         dz += mEstimatedRobotPose.get().estimatedPose.getZ();
         dR += mEstimatedRobotPose.get().estimatedPose.getRotation().getAngle();
-        amb += camera.getLatestResult().getBestTarget().getPoseAmbiguity();
+        //amb += camera.getLatestResult().getBestTarget().getPoseAmbiguity();
       }
 
       }
@@ -108,7 +108,7 @@ public class Vision extends SubsystemBase {
     // SmartDashboard.putNumber("Dx", dx/listOfCameras.size());
     // SmartDashboard.putNumber("Dy", dy/listOfCameras.size());
     // SmartDashboard.putNumber("Dz", dz/listOfCameras.size());
-     SmartDashboard.putNumber("amb", amb);
+     //SmartDashboard.putNumber("amb", amb);
     /**
      * put into the drivetrain once we have it added
      */
@@ -116,7 +116,7 @@ public class Vision extends SubsystemBase {
       
     //mCommandSwerveDrivetrain.addVisionMeasurement(currentPose3d.toPose2d(),mEstimatedRobotPose.get().timestampSeconds);
     double size = listOfCameras.size();
-    currentPose3d = checkPoseForAnomilies(new Pose3d(dx/size, dy/size, dz/size, new Rotation3d(new Rotation2d(dR/size))),amb/size);
+    currentPose3d = checkPoseForAnomilies(new Pose3d(dx/size, dy/size, dz/size, new Rotation3d(new Rotation2d(dR/size))));
     lastPose3d = currentPose3d;
     // then here we will pass into vision
     mDrivetrain.addVisionMeasurement(currentPose3d.toPose2d(), Timer.getFPGATimestamp());
@@ -137,23 +137,22 @@ public class Vision extends SubsystemBase {
         camerasHaveTargets.set(i, false);
      }}
   }
-  // this checks our pose we passed in to our last pose and makes sure that it hasn't changed by a wild degree or else it will throw off our auto
-  private Pose3d checkPoseForAnomilies(Pose3d p, double amb){
+  private Pose3d checkPoseForAnomilies(Pose3d p){
     if(calledBefore == false){
       calledBefore = true;
       lastPose3d = p;
+      return lastPose3d;
+    }
+    if(!p.getMeasureX().isNear(lastPose3d.getMeasureX(), 0.1)||
+    !p.getMeasureY().isNear(lastPose3d.getMeasureY(), 0.1)
+    ||!p.getRotation().getMeasureZ().isNear(lastPose3d.getRotation().getMeasureZ(), 0.05)
+    ){
+      return lastPose3d;
+    }else{
       return p;
-    }else{
-    if(p.getX() >= lastPose3d.getX() * 1.75 || p.getY() >= lastPose3d.getY() * 1.75 || p.getZ() >= lastPose3d.getZ() * 1.75 || p.getRotation().getAngle() >= lastPose3d.getRotation().getAngle() * 1.75){
-      return lastPose3d;
-    }else if(amb > 0.25){
-      return lastPose3d;
-    }else{
-      return lastPose3d;
-    }}
-      
-    
+    }
   }
+  
   private int checkcameraFiFo(int i){
     for(int j = 0; j <20; j++){
       if(null != listOfCameras.get(i).getAllUnreadResults().get(j)){
@@ -173,6 +172,7 @@ public class Vision extends SubsystemBase {
     // SmartDashboard.putNumber("fid", camera.getLatestResult().getBestTarget().getFiducialId());
     //SmartDashboard.putNumber("x value", mDrivetrain.getState().Pose.getX());
     SmartDashboard.putBoolean("calledbefore", calledBefore);
+    
     //dummytest
   }
 }
