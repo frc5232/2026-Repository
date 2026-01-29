@@ -19,7 +19,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Aiming;
-import frc.robot.subsystems.Animate;
 import frc.robot.subsystems.Auto;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Vision;
@@ -43,7 +42,7 @@ public class RobotContainer {
     private final Vision mvision = new Vision(drivetrain);
     private final Auto mAuto = new Auto(drivetrain,drive);
     private final Aiming mAiming = new Aiming(drivetrain,drive);
-    private final Animate mAnimate = new Animate();
+    
     public RobotContainer() {
         configureBindings();
     }

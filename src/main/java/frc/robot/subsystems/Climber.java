@@ -18,6 +18,7 @@ public class Climber extends SubsystemBase {
   private void climbUp(){
     // we will be ajusting this but this is most of it for the climb
     climbingTalon.setPosition(90);
+    
   }
   private void climbDown(){
     climbingTalon.setPosition(0);
@@ -25,5 +26,6 @@ public class Climber extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+    
   }
 }

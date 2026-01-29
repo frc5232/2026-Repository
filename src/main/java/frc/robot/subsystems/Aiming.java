@@ -3,6 +3,7 @@ package frc.robot.subsystems;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -16,23 +17,24 @@ public class Aiming extends SubsystemBase {
   /** Creates a new Aiming. */
   CommandSwerveDrivetrain mDrivetrain;
   FieldCentric drive;
-  Pose3d currentPose;
-  Pose3d staticHubPose3d;
+  Pose2d currentPose;
+  Pose2d staticHubPose2d;
   public boolean aim = false;
   public Aiming(CommandSwerveDrivetrain drivetrain,SwerveRequest.FieldCentric mCentric) {
     /**
      * Change to actual position of hub pose
      * current pose will just be drivetrain.getstate.pose.get(value)
      */
-    staticHubPose3d = new Pose3d(10, 3, 0, new Rotation3d(new Rotation2d(0)));
-    currentPose = new Pose3d(13,4,0,new Rotation3d(new Rotation2d(10)));
-    drive = mCentric;
     mDrivetrain = drivetrain;
+    staticHubPose2d = new Pose2d(10, 3,new Rotation2d(0));
+    currentPose = mDrivetrain.getState().Pose;
+    drive = mCentric;
+    
   }
   private void calculate(){
     if(aim){
-      double x = Math.abs(currentPose.getX() - staticHubPose3d.getX());
-      double y = Math.abs(currentPose.getY() - staticHubPose3d.getY());
+      double x = Math.abs(currentPose.getX() - staticHubPose2d.getX());
+      double y = Math.abs(currentPose.getY() - staticHubPose2d.getY());
       double xx = (x*Math.sin(90))/Math.sqrt((x*x + y*y));
       double yawheading;
       if(DriverStation.getAlliance().get().toString() == "blue"){
