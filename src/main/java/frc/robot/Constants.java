@@ -5,7 +5,8 @@
 package frc.robot;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.hardware.TalonFX;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.motorcontrol.Talon;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -23,11 +24,28 @@ public final class Constants {
     public static final int kDriverControllerPort = 0;
     
   }
-  private class mm{
-     public static final TalonFXConfiguration mConfiguration = new TalonFXConfiguration();
+  public class talonIntakeCon{
+     public static int INTAKE_MOTOR_ID = 8;
+     public static final TalonFXConfiguration mSpinConfiguration = new TalonFXConfiguration();
+     public static int SPIN_MOTOR_ID = 55;
+     public static final TalonFXConfiguration mIntakeMotorConfig = new TalonFXConfiguration();
      static{
-      mConfiguration.Voltage.PeakForwardVoltage = 4;
-      mConfiguration.Voltage.PeakReverseVoltage = -4;
+      
+      mSpinConfiguration.Voltage.PeakForwardVoltage = 3;
+      mSpinConfiguration.Voltage.PeakReverseVoltage = -3;
+      mSpinConfiguration.Slot0.kP = 0;
+      mSpinConfiguration.Slot0.kI = 0;
+      mSpinConfiguration.Slot0.kD = 0;
+      mSpinConfiguration.HardwareLimitSwitch.ForwardLimitAutosetPositionValue = 0;
+      mSpinConfiguration.HardwareLimitSwitch.ForwardLimitAutosetPositionEnable = true;
+      mSpinConfiguration.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+      mSpinConfiguration.SoftwareLimitSwitch.ForwardSoftLimitThreshold = Units.degreesToRotations(10);
+      mSpinConfiguration.SoftwareLimitSwitch.ReverseSoftLimitThreshold = Units.degreesToRotations(90);
+      mSpinConfiguration.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+      mIntakeMotorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = Units.degreesToRotations(10);
+      mIntakeMotorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+      mIntakeMotorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = Units.degreesToRadians(90);
+      mIntakeMotorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
      }
      
   }

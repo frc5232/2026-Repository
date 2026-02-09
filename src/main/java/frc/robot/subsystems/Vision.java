@@ -7,6 +7,7 @@ package frc.robot.subsystems;
 import java.util.ArrayList;
 import java.util.Optional;
 
+import org.opencv.photo.Photo;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
@@ -31,6 +32,7 @@ public class Vision extends SubsystemBase {
   private Pose3d currentPose3d;
   private PhotonCamera camera;
   private PhotonCamera camera2;
+  private PhotonCamera camera3;
   private ArrayList<PhotonCamera> listOfCameras = new ArrayList<PhotonCamera>();
   
   private AprilTagFieldLayout aprilTagFieldLayouts = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
@@ -39,23 +41,31 @@ public class Vision extends SubsystemBase {
   private ArrayList<Transform3d> robotToCam = new ArrayList<Transform3d>();
   
   private static final Transform3d camera1Pos=
-    new Transform3d(new Translation3d(-0.4, 0.12, -0.1), new Rotation3d(0, 270, 0));
+    new Transform3d(new Translation3d(0.07, 0.48, -0.1), new Rotation3d(0, 180, 0));
     private static final Transform3d camera2Pos=
-    new Transform3d(new Translation3d(0.4, 0.12, 0.1), new Rotation3d(0, 270, 0));
-  private PhotonPoseEstimator mEstimator;
+    new Transform3d(new Translation3d(0.45, 0.12, -0.1), new Rotation3d(0, 180, 90));
+  private static final Transform3d camera3Pos=
+    new Transform3d(new Translation3d(0.14, 0.-0.21, -0.1), new Rotation3d(0, 180, 180));
+  private static final Transform3d camera4Pos=
+    new Transform3d(new Translation3d(-0.25, 0.15, -0.1), new Rotation3d(0, 180, 270));
+    private PhotonPoseEstimator mEstimator;
   private Pose3d lastPose3d;
   private CommandSwerveDrivetrain mDrivetrain;
     public Vision(CommandSwerveDrivetrain mCommandSwerveDrivetrain){
     this.mDrivetrain = mCommandSwerveDrivetrain;
 
     camera = new PhotonCamera("frontFacingCamera");
-    camera2 = new PhotonCamera("backFacingCamera");
+    //camera2 = new PhotonCamera("leftFacingCamera");
+    //camera3 = new PhotonCamera("BackFacingCamera");
     listOfCameras.add(0, camera);
-    listOfCameras.add(1, camera2);
+    //listOfCameras.add(1, camera2);
+    //listOfCameras.add(1,camera3);
     robotToCam.add(0, camera1Pos);
-    robotToCam.add(1, camera2Pos);
+    //robotToCam.add(1, camera2Pos);
+    //robotToCam.add(1,camera3Pos);
     camerasHaveTargets.add(0,false);
-    camerasHaveTargets.add(1,false);
+    //camerasHaveTargets.add(1,false);
+    //camerasHaveTargets.add(2,false);
   }
   /**
    * Calculating and updateing our pose and passing it to the drivetrain which is needed to for the auto 
@@ -73,7 +83,7 @@ public class Vision extends SubsystemBase {
       mEstimator = new PhotonPoseEstimator(aprilTagFieldLayouts, robotToCam.get(i));
       //setting our camera to the camera from the list
       PhotonCamera m = listOfCameras.get(i);
-      //checking if it has a targer before we try to do anything with it
+      //checking if it has a target before we try to do anything with it
       if(camerasHaveTargets.get(i) == true){
         //checks if our fidlical id is present
         //doesnt currently do anything so im wondering if its needed or not for anything
@@ -122,6 +132,7 @@ public class Vision extends SubsystemBase {
      }}
   }
   private boolean yawFixer(Pose3d pp){
+    // this is to fix the yaw and it was just slightly off and annoying hunter 
     if(direction == 0){
     direction =pp.getRotation().getMeasureZ().compareTo(lastPose3d.getRotation().getMeasureZ());
     }else{
@@ -154,13 +165,16 @@ public class Vision extends SubsystemBase {
       lastPose3d = p;
       return lastPose3d;
     }
+    if(Timer.getFPGATimestamp() < 10){
+      return p;
+    }
     /**
      * if not near out last pose by a factor of 10% return the last pose 
      * and we are checking against the X,Y and Rotation values
      * Because its called with peridioic which is every 20ms we wont be going fast enough for it to be an issue of moving or changing to much
      */
-    if(!p.getMeasureX().isNear(lastPose3d.getMeasureX(), 0.15)||
-    !p.getMeasureY().isNear(lastPose3d.getMeasureY(), 0.15)
+    if(!p.getMeasureX().isNear(lastPose3d.getMeasureX(), 0.1)||
+    !p.getMeasureY().isNear(lastPose3d.getMeasureY(), 0.1)
     ||!yawFixer(p)
     ){
       return lastPose3d;

@@ -28,7 +28,7 @@ public class Telemetry {
      * 
      * @param maxSpeed Maximum speed in meters per second
      */
-    public Telemetry(double maxSpeed) {
+    public Telemetry(double maxSpeed){
         MaxSpeed = maxSpeed;
         SignalLogger.start();
 
