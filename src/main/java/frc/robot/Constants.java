@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import java.time.chrono.MinguoChronology;
+
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.motorcontrol.Talon;
@@ -22,30 +24,33 @@ public final class Constants {
   
   public static class OperatorConstants {
     public static final int kDriverControllerPort = 0;
+    public static double encoderConstant = 0.62;
+    public static double encoderDownPos = 0.93;
     
   }
   public class talonIntakeCon{
+    
      public static int INTAKE_MOTOR_ID = 8;
      public static final TalonFXConfiguration mSpinConfiguration = new TalonFXConfiguration();
-     public static int SPIN_MOTOR_ID = 55;
+     public static int SPIN_MOTOR_ID = 9;
      public static final TalonFXConfiguration mIntakeMotorConfig = new TalonFXConfiguration();
      static{
-      
-      mSpinConfiguration.Voltage.PeakForwardVoltage = 3;
-      mSpinConfiguration.Voltage.PeakReverseVoltage = -3;
-      mSpinConfiguration.Slot0.kP = 0;
-      mSpinConfiguration.Slot0.kI = 0;
-      mSpinConfiguration.Slot0.kD = 0;
-      mSpinConfiguration.HardwareLimitSwitch.ForwardLimitAutosetPositionValue = 0;
-      mSpinConfiguration.HardwareLimitSwitch.ForwardLimitAutosetPositionEnable = true;
-      mSpinConfiguration.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-      mSpinConfiguration.SoftwareLimitSwitch.ForwardSoftLimitThreshold = Units.degreesToRotations(10);
-      mSpinConfiguration.SoftwareLimitSwitch.ReverseSoftLimitThreshold = Units.degreesToRotations(90);
-      mSpinConfiguration.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-      mIntakeMotorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = Units.degreesToRotations(10);
-      mIntakeMotorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-      mIntakeMotorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = Units.degreesToRadians(90);
-      mIntakeMotorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+      // in case forget intake motor up and down is kP of 6 kD of 0.005
+      // mSpinConfiguration.Voltage.PeakForwardVoltage = 3;
+      // mSpinConfiguration.Voltage.PeakReverseVoltage = -3;
+      mIntakeMotorConfig.Slot0.kP = 6;
+      mIntakeMotorConfig.Slot0.kI = 0;
+      mIntakeMotorConfig.Slot0.kD = 0.005;
+      // mSpinConfiguration.HardwareLimitSwitch.ForwardLimitAutosetPositionValue = 0;
+      // mSpinConfiguration.HardwareLimitSwitch.ForwardLimitAutosetPositionEnable = true;
+      // mSpinConfiguration.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+      // mSpinConfiguration.SoftwareLimitSwitch.ForwardSoftLimitThreshold = Units.degreesToRotations(10);
+      // mSpinConfiguration.SoftwareLimitSwitch.ReverseSoftLimitThreshold = Units.degreesToRotations(90);
+      // mSpinConfiguration.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+    //   mIntakeMotorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = Units.degreesToRotations(20);
+    //   mIntakeMotorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    //   mIntakeMotorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = Units.degreesToRotations(20);
+    //   mIntakeMotorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
      }
      
   }

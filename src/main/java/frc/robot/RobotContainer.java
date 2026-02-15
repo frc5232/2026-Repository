@@ -22,6 +22,7 @@ import frc.robot.subsystems.Auto;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Vision;
+import frc.robot.subsystems.sim;
 
 public class RobotContainer {
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -39,24 +40,33 @@ public class RobotContainer {
     private final CommandXboxController joystick = new CommandXboxController(0);
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
-    private final Vision mvision = new Vision(drivetrain);
-    private final Auto mAuto = new Auto(drivetrain,drive);
-    //private final Aiming mAiming = new Aiming(drivetrain,drive);
-    //private final Intake mIntake = new Intake();
-    // private final Constants mConstants = new Constants();
+    private final sim mSim = new sim(drivetrain);
+    //private final Vision mvision = new Vision(drivetrain);
+    //private final Auto mAuto = new Auto(drivetrain,drive);
+    private final Aiming mAiming = new Aiming(drivetrain,drive);
+    private final Intake mIntake = new Intake();
+    //private final Constants mConstants = new Constants();
     public RobotContainer() {
         configureBindings();
     }
 
+    private double checkJoyStick(double joystickvalue){
+        if(joystickvalue > 0.02){
+            return 0;
+        }
+        return joystickvalue;
+    }
     private void configureBindings() {
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
+        
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
+            
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with NOT NEGATIVE! POSITIVE X (right)
+                drive.withVelocityX(checkJoyStick(-joystick.getLeftY()) * MaxSpeed) // Drive forward with negative Y (forward)
+                    .withVelocityY(checkJoyStick(-joystick.getLeftX()) * MaxSpeed) // Drive left with negative X (left)
+                    .withRotationalRate(checkJoyStick(joystick.getRightX()) * MaxAngularRate) // Drive counterclockwise with NOT NEGATIVE! POSITIVE X (right)
             )
         );
 
@@ -80,15 +90,21 @@ public class RobotContainer {
         // joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
         // Reset the field-centric heading on left bumper press.
-        joystick.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+        joystick.leftBumper().onTrue(drivetrain.runOnce(()->drivetrain.seedFieldCentric(new Rotation2d(180))));
+        
         // joystick.pov(0).toggleOnTrue(new InstantCommand(()->mIntake.intakeBalls())).toggleOnFalse(new InstantCommand(()-> mIntake.stopIntake()));
         // joystick.pov(0).onChange(mIntake.increasePositionBy1());
         // joystick.a().onChange(mIntake.increasePositionBy1());
         drivetrain.registerTelemetry(logger::telemeterize);
+        //joystick.pov(0).onChange(new InstantCommand(()->mIntake.increasePosition()));
+       // joystick.x().onChange(new InstantCommand(()->mIntake.goalPos()));
+      
+        
     }
 
     public Command getAutonomousCommand() {
-        return new InstantCommand(()->mAuto.PickAutoToRun());
+        //return new InstantCommand(()->mAuto.PickAutoToRun());
+        return null;
     }
     
 }

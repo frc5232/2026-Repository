@@ -8,20 +8,33 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.hardware.TalonFX;
 
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Shooter extends SubsystemBase {
   /** Creates a new Shooter. */
-  private TalonFX feeder = new TalonFX(9);
-  private TalonFX shooter = new TalonFX(8);
-  public Shooter() {}
+  private TalonFX feeder;
+  private TalonFX shooter;
+  private DutyCycleEncoder nCycleEncoder;
+  public Shooter() {
+    // feeder = new TalonFX(Constants.talonIntakeCon.INTAKE_MOTOR_ID);
+    // shooter = new TalonFX(Constants.talonIntakeCon.SPIN_MOTOR_ID);
+    // nCycleEncoder = new DutyCycleEncoder(0);
+    
+  }
+  private void setArmPoseAtStart(){
+    while(nCycleEncoder.get() != 0){
+    feeder.setPosition(feeder.getPosition().getValueAsDouble() + 1);
+  }
+  }
   private void shootOut(){
-    feeder.setPosition(10);
-    shooter.set(1);
+    feeder.setPosition(Units.degreesToRotations(-90));
+    shooter.setVoltage(4);
   }
   private void stopShooting(){
-    feeder.setPosition(0);
-    shooter.set(0);
+    feeder.setPosition(Units.degreesToRotations(90));
+    shooter.setVoltage(0);
   }
   @Override
   public void periodic() {
