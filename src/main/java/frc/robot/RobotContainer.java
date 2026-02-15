@@ -9,6 +9,7 @@ import static edu.wpi.first.units.Units.*;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -22,11 +23,15 @@ import frc.robot.subsystems.Auto;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Vision;
-import frc.robot.subsystems.sim;
 
 public class RobotContainer {
-    private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-    private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+    private SlewRateLimiter xAxisRateLimiter = new SlewRateLimiter(0.75);
+    private SlewRateLimiter yAxisRateLimiter = new SlewRateLimiter(0.75);
+    private SlewRateLimiter rotationRateLimiter = new SlewRateLimiter(0.75);
+    private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
+                                                                                        // speed
+    private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second
+                                                                                      // max angular velocity
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
@@ -39,48 +44,50 @@ public class RobotContainer {
 
     private final CommandXboxController joystick = new CommandXboxController(0);
 
-    public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
-    private final sim mSim = new sim(drivetrain);
-    //private final Vision mvision = new Vision(drivetrain);
-    //private final Auto mAuto = new Auto(drivetrain,drive);
-    private final Aiming mAiming = new Aiming(drivetrain,drive);
-    private final Intake mIntake = new Intake();
-    //private final Constants mConstants = new Constants();
+    public final CommandSwerveDrivetrain drivetrainSubsystem = TunerConstants.createDrivetrain();
+
+    // private final Vision visionSubsystem = new Vision(drivetrain);
+    // private final Auto autoSubsystem = new Auto(drivetrain,drive);
+    private final Aiming aimingSubsystem = new Aiming(drivetrainSubsystem, drive);
+    private final Intake intakeSubsystem = new Intake();
+
+    // private final Constants mConstants = new Constants();
     public RobotContainer() {
         configureBindings();
     }
 
-    private double checkJoyStick(double joystickvalue){
-        if(joystickvalue > 0.02){
-            return 0;
-        }
-        return joystickvalue;
-    }
     private void configureBindings() {
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
-        
-        drivetrain.setDefaultCommand(
-            // Drivetrain will execute this command periodically
-            
-            drivetrain.applyRequest(() ->
-                drive.withVelocityX(checkJoyStick(-joystick.getLeftY()) * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(checkJoyStick(-joystick.getLeftX()) * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(checkJoyStick(joystick.getRightX()) * MaxAngularRate) // Drive counterclockwise with NOT NEGATIVE! POSITIVE X (right)
-            )
-        );
+
+        drivetrainSubsystem.setDefaultCommand(
+                // Drivetrain will execute this command periodically
+
+                drivetrainSubsystem.applyRequest(() -> drive
+                        .withVelocityX(xAxisRateLimiter.calculate(-joystick.getLeftY()) * MaxSpeed) // Drive forward
+                                                                                                    // with negative Y
+                                                                                                    // (forward)
+                        .withVelocityY(yAxisRateLimiter.calculate(-joystick.getLeftX()) * MaxSpeed) // Drive left with
+                                                                                                    // negative X (left)
+                        .withRotationalRate(rotationRateLimiter.calculate(joystick.getRightX()) * MaxAngularRate) // Drive
+                                                                                                                  // counterclockwise
+                                                                                                                  // with
+                                                                                                                  // NOT
+                                                                                                                  // NEGATIVE!
+                                                                                                                  // POSITIVE
+                                                                                                                  // X
+                                                                                                                  // (right)
+                ));
 
         // Idle while the robot is disabled. This ensures the configured
         // neutral mode is applied to the drive motors while disabled.
         final var idle = new SwerveRequest.Idle();
         RobotModeTriggers.disabled().whileTrue(
-            drivetrain.applyRequest(() -> idle).ignoringDisable(true)
-        );
+                drivetrainSubsystem.applyRequest(() -> idle).ignoringDisable(true));
 
-        joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
-        joystick.b().whileTrue(drivetrain.applyRequest(() ->
-            point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))
-        ));
+        joystick.a().whileTrue(drivetrainSubsystem.applyRequest(() -> brake));
+        joystick.b().whileTrue(drivetrainSubsystem.applyRequest(
+                () -> point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))));
 
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
@@ -90,22 +97,23 @@ public class RobotContainer {
         // joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
         // Reset the field-centric heading on left bumper press.
-        joystick.leftBumper().onTrue(drivetrain.runOnce(()->drivetrain.seedFieldCentric(new Rotation2d(180))));
-        
-        // joystick.pov(0).toggleOnTrue(new InstantCommand(()->mIntake.intakeBalls())).toggleOnFalse(new InstantCommand(()-> mIntake.stopIntake()));
+        joystick.leftBumper()
+                .onTrue(drivetrainSubsystem.runOnce(() -> drivetrainSubsystem.seedFieldCentric(new Rotation2d(180))));
+
+        // joystick.pov(0).toggleOnTrue(new
+        // InstantCommand(()->mIntake.intakeBalls())).toggleOnFalse(new
+        // InstantCommand(()-> mIntake.stopIntake()));
         // joystick.pov(0).onChange(mIntake.increasePositionBy1());
         // joystick.a().onChange(mIntake.increasePositionBy1());
-        drivetrain.registerTelemetry(logger::telemeterize);
-        //joystick.pov(0).onChange(new InstantCommand(()->mIntake.increasePosition()));
-       // joystick.x().onChange(new InstantCommand(()->mIntake.goalPos()));
-      
-        
+        drivetrainSubsystem.registerTelemetry(logger::telemeterize);
+        // joystick.pov(0).onChange(new InstantCommand(()->mIntake.increasePosition()));
+        // joystick.x().onChange(new InstantCommand(()->mIntake.goalPos()));
+
     }
 
     public Command getAutonomousCommand() {
-        //return new InstantCommand(()->mAuto.PickAutoToRun());
+        // return new InstantCommand(()->mAuto.PickAutoToRun());
         return null;
     }
-    
-}
 
+}

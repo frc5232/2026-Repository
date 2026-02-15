@@ -11,20 +11,24 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class Climber extends SubsystemBase {
   /** Creates a new Climber. */
   private TalonFX climbingTalon = new TalonFX(0);
+
   public Climber() {
-    
+
   }
-  private void climbUp(){
+
+  private void climbUp() {
     // we will be ajusting this but this is most of it for the climb
     climbingTalon.setPosition(90);
-    
+
   }
-  private void climbDown(){
+
+  private void climbDown() {
     climbingTalon.setPosition(0);
   }
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    
+
   }
 }
