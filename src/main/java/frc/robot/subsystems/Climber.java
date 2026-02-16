@@ -4,26 +4,33 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.controls.PositionDutyCycle;
 import com.ctre.phoenix6.hardware.TalonFX;
 
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 
 public class Climber extends SubsystemBase {
   /** Creates a new Climber. */
   private TalonFX climbingTalon = new TalonFX(0);
-
+ 
   public Climber() {
 
+    climbingTalon.getConfigurator().apply(Constants.climberConstants.CLIMB_MOTOR_CONFIG.Slot0);
   }
 
-  private void climbUp() {
+  public InstantCommand climbUp() {
     // we will be ajusting this but this is most of it for the climb
-    climbingTalon.setPosition(90);
+    return new InstantCommand(()->
+    climbingTalon.setControl(new PositionDutyCycle(climbingTalon.getPosition().getValueAsDouble() + 0.5)));
 
   }
 
-  private void climbDown() {
-    climbingTalon.setPosition(0);
+  public InstantCommand climbDown() {
+    return new InstantCommand(()->
+    climbingTalon.setControl(new PositionDutyCycle(climbingTalon.getPosition().getValueAsDouble() - 0.5)));
   }
 
   @Override

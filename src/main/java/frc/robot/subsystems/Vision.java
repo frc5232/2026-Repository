@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems;
 
+import java.lang.constant.Constable;
 import java.util.ArrayList;
 import java.util.Optional;
 
@@ -21,6 +22,7 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 
 public class Vision extends SubsystemBase {
   /** Creates a new Auto. */
@@ -31,30 +33,24 @@ public class Vision extends SubsystemBase {
   private boolean calledBefore = false;
   private Pose3d currentPose3d;
   private PhotonCamera camera;
-  private PhotonCamera camera2;
-  private PhotonCamera camera3;
+
   private ArrayList<PhotonCamera> listOfCameras = new ArrayList<PhotonCamera>();
 
   private AprilTagFieldLayout aprilTagFieldLayouts = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
-  private Optional<EstimatedRobotPose> mEstimatedRobotPose;
+  private Optional<EstimatedRobotPose> estimatedRobotPose;
   private ArrayList<Boolean> camerasHaveTargets = new ArrayList<Boolean>();
   private ArrayList<Transform3d> robotToCam = new ArrayList<Transform3d>();
 
-  private static final Transform3d camera1Pos = new Transform3d(new Translation3d(0.07, 0.48, -0.1),
-      new Rotation3d(0, 180, 0));
-  private static final Transform3d camera2Pos = new Transform3d(new Translation3d(0.45, 0.12, -0.1),
-      new Rotation3d(0, 180, 90));
-  private static final Transform3d camera3Pos = new Transform3d(new Translation3d(0.14, 0. - 0.21, -0.1),
-      new Rotation3d(0, 180, 180));
-  private static final Transform3d camera4Pos = new Transform3d(new Translation3d(-0.25, 0.15, -0.1),
-      new Rotation3d(0, 180, 270));
-  private PhotonPoseEstimator mEstimator;
+  private static final Transform3d camera1Pos = Constants.visionConstant.camera1Pos;
+
+  private PhotonPoseEstimator estimator;
   private Pose3d lastPose3d;
-  private CommandSwerveDrivetrain mDrivetrain;
+  private CommandSwerveDrivetrain drivetrain;
   private ArrayList<PhotonPoseEstimator> photonPoseEstimators;
+
   public Vision(CommandSwerveDrivetrain mCommandSwerveDrivetrain) {
-    this.mDrivetrain = mCommandSwerveDrivetrain;
-    
+    this.drivetrain = mCommandSwerveDrivetrain;
+
     camera = new PhotonCamera("frontFacingCamera");
     // camera2 = new PhotonCamera("leftFacingCamera");
     // camera3 = new PhotonCamera("BackFacingCamera");
@@ -83,10 +79,10 @@ public class Vision extends SubsystemBase {
     double size = 0;
     // iterating through our list of cameras
     for (int i = 0; i < listOfCameras.size(); i++) {
-     
+
       // setting our photon pose estimator with our robot to cam and april tag field
       // layout
-      mEstimator = new PhotonPoseEstimator(aprilTagFieldLayouts, robotToCam.get(i));
+      estimator = photonPoseEstimators.get(i);
       // setting our camera to the camera from the list
       PhotonCamera m = listOfCameras.get(i);
       // checking if it has a target before we try to do anything with it
@@ -94,24 +90,26 @@ public class Vision extends SubsystemBase {
         // checks if our fidlical id is present
         // doesnt currently do anything so im wondering if its needed or not for
         // anything
-        if (aprilTagFieldLayouts.getTagPose(m.getLatestResult().getBestTarget().getFiducialId()).isPresent()) {
-          // updates our current pose with the camera transformation,pose of the id we
-          // see,and our camera position on the robot
-          currentPose3d = PhotonUtils.estimateFieldToRobotAprilTag(
-              m.getLatestResult().getBestTarget().getBestCameraToTarget(),
-              aprilTagFieldLayouts.getTagPose(m.getLatestResult().getBestTarget().getFiducialId()).get(),
-              robotToCam.get(i));
-        }
+        // if
+        // (aprilTagFieldLayouts.getTagPose(m.getLatestResult().getBestTarget().getFiducialId()).isPresent())
+        // {
+        // // updates our current pose with the camera transformation,pose of the id we
+        // // see,and our camera position on the robot
+        // currentPose3d = PhotonUtils.estimateFieldToRobotAprilTag(
+        // m.getLatestResult().getBestTarget().getBestCameraToTarget(),
+        // aprilTagFieldLayouts.getTagPose(m.getLatestResult().getBestTarget().getFiducialId()).get(),
+        // robotToCam.get(i));
+        // }
         // sets ouir
-        mEstimatedRobotPose = mEstimator.estimateCoprocMultiTagPose(m.getLatestResult());
-        if (mEstimatedRobotPose.isEmpty()) {
-          mEstimatedRobotPose = mEstimator.estimateLowestAmbiguityPose(m.getLatestResult());
+        estimatedRobotPose = estimator.estimateCoprocMultiTagPose(m.getLatestResult());
+        if (estimatedRobotPose.isEmpty()) {
+          estimatedRobotPose = estimator.estimateLowestAmbiguityPose(m.getLatestResult());
         }
         // adding our values we calculated to our overall total
-        dx += mEstimatedRobotPose.get().estimatedPose.getX();
-        dy += mEstimatedRobotPose.get().estimatedPose.getY();
-        dz += mEstimatedRobotPose.get().estimatedPose.getZ();
-        dR += mEstimatedRobotPose.get().estimatedPose.getRotation().getAngle();
+        dx += estimatedRobotPose.get().estimatedPose.getX();
+        dy += estimatedRobotPose.get().estimatedPose.getY();
+        dz += estimatedRobotPose.get().estimatedPose.getZ();
+        dR += estimatedRobotPose.get().estimatedPose.getRotation().getAngle();
         size += 1;
       }
 
@@ -122,11 +120,13 @@ public class Vision extends SubsystemBase {
     // updating our current pose with our total values then dividing by amount of
     // cameras and checking for anomilies
     if (size != 0) {
-      currentPose3d = checkPoseForAnomilies(
-          new Pose3d(dx / size, dy / size, dz / size, new Rotation3d(new Rotation2d(dR / size))));
-      lastPose3d = currentPose3d;
+      if (checkPoseForAnomilies(
+          new Pose3d(dx / size, dy / size, dz / size, new Rotation3d(new Rotation2d(dR / size))))) {
+        // then here we will pass into vision
+        lastPose3d = currentPose3d;
+        drivetrain.addVisionMeasurement(currentPose3d.toPose2d(), Timer.getFPGATimestamp());
+      }
       // then here we will pass into vision
-      mDrivetrain.addVisionMeasurement(currentPose3d.toPose2d(), Timer.getFPGATimestamp());
     }
   }
 
@@ -176,14 +176,14 @@ public class Vision extends SubsystemBase {
    * @return whether or whether not to trust the pose if yes then return the pose
    *         we passed else return past pose
    */
-  private Pose3d checkPoseForAnomilies(Pose3d p) {
+  private boolean checkPoseForAnomilies(Pose3d p) {
     if (calledBefore == false) {
       calledBefore = true;
       lastPose3d = p;
-      return lastPose3d;
+      return true;
     }
-    if (Timer.getFPGATimestamp() < 10) {
-      return p;
+    if (Timer.getFPGATimestamp() < 5) {
+      return true;
     }
     /**
      * if not near out last pose by a factor of 10% return the last pose
@@ -194,9 +194,9 @@ public class Vision extends SubsystemBase {
     if (!p.getMeasureX().isNear(lastPose3d.getMeasureX(), 0.1) ||
         !p.getMeasureY().isNear(lastPose3d.getMeasureY(), 0.1)
         || !yawFixer(p)) {
-      return lastPose3d;
+      return false;
     } else {
-      return p;
+      return true;
     }
   }
 

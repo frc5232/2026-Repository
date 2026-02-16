@@ -5,12 +5,14 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 //encoder
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -29,7 +31,7 @@ public class Intake extends SubsystemBase {
 
     moveToFloorTalonFX = new TalonFX(8);
     absoluteEncoder = new DutyCycleEncoder(0);
-    pidController = new PIDController(2, 0, 0.005);
+    
     moveToFloorTalonFX.getConfigurator().apply(Constants.talonIntakeCon.INTAKE_MOTOR_CONFIG);
 
     closesTalonFX = new TalonFX(Constants.talonIntakeCon.SPIN_MOTOR_ID);
@@ -44,10 +46,10 @@ public class Intake extends SubsystemBase {
    * our command to go to our down position using a set control until were at our
    * down positon
    */
-  private void goToDownPositionCommand() {
-    new InstantCommand(() -> moveToFloorTalonFX
-        .setControl(new MotionMagicExpoVoltage(moveToFloorTalonFX.getPosition().getValueAsDouble() + 0.1)))
-        .until(() -> atDownPosition());
+  public Command goToDownPositionCommand() {
+    return new InstantCommand(() -> moveToFloorTalonFX
+        .setControl(new MotionMagicExpoVoltage(moveToFloorTalonFX.getPosition().getValueAsDouble() + 0.1)));
+        //.until(() -> atDownPosition())
   }
 
   /*
@@ -55,8 +57,10 @@ public class Intake extends SubsystemBase {
    * starting pose and saying to do it
    * until startingpose returns true
    */
-  private void gotoStartPositonCommand() {
-    new InstantCommand(() -> movementToStartingPosition()).until(() -> atStartingPosition());
+  public Command gotoStartPositonCommand() {
+    return new InstantCommand(() -> moveToFloorTalonFX
+          .setControl(new PositionVoltage(moveToFloorTalonFX.getPosition().getValueAsDouble() - 0.1)));
+    //.until(() -> atStartingPosition()
   }
 
   /*
@@ -73,8 +77,7 @@ public class Intake extends SubsystemBase {
       moveToFloorTalonFX
           .setControl(new MotionMagicExpoVoltage(moveToFloorTalonFX.getPosition().getValueAsDouble() + 0.1));
     } else if (absoluteEncoder.get() > encoderConstant) {
-      moveToFloorTalonFX
-          .setControl(new MotionMagicExpoVoltage(moveToFloorTalonFX.getPosition().getValueAsDouble() - 0.1));
+      
     }
 
   }

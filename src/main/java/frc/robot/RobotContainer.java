@@ -20,8 +20,10 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Aiming;
 import frc.robot.subsystems.Auto;
+import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Vision;
 
 public class RobotContainer {
@@ -50,7 +52,8 @@ public class RobotContainer {
     // private final Auto autoSubsystem = new Auto(drivetrain,drive);
     private final Aiming aimingSubsystem = new Aiming(drivetrainSubsystem, drive);
     private final Intake intakeSubsystem = new Intake();
-
+    private final Climber climberSubsystem = new Climber();
+    private final Shooter shooterSubsysem = new Shooter();
     // private final Constants mConstants = new Constants();
     public RobotContainer() {
         configureBindings();
@@ -109,6 +112,17 @@ public class RobotContainer {
         // joystick.pov(0).onChange(new InstantCommand(()->mIntake.increasePosition()));
         // joystick.x().onChange(new InstantCommand(()->mIntake.goalPos()));
 
+
+         joystick.x().whileTrue(climberSubsystem.climbUp());
+         joystick.y().whileTrue(climberSubsystem.climbDown());
+         joystick.pov(0).whileTrue(climberSubsystem.climbUp());
+         joystick.pov(90).whileTrue(climberSubsystem.climbDown());
+
+
+        // joystick.x().whileTrue(intakeSubsystem.goToDownPositionCommand());
+        // joystick.pov(0).whileTrue(intakeSubsystem.goToDownPositionCommand());
+        // joystick.y().whileTrue(intakeSubsystem.gotoStartPositonCommand());
+        // joystick.pov(90).whileTrue(intakeSubsystem.gotoStartPositonCommand());
     }
 
     public Command getAutonomousCommand() {

@@ -8,6 +8,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -18,16 +19,18 @@ public class Shooter extends SubsystemBase {
   private TalonFX shooter;
 
   public Shooter() {
-
+    /**
+     * Look into making it into a .withvelovity instead of voltage come testing time
+     */
   }
-
+  
   /*
    * A sequential command group with chained instant commnads linked to sppeeding
    * up voltage until its greater then 3.8 for both of them with diffrent increase
    * amounts for both motors
    */
-  private void shootOut() {
-    new SequentialCommandGroup(new InstantCommand(() -> speedingUpVoltage(constantShooter, 0.2))
+  public Command shootOut() {
+    return new SequentialCommandGroup(new InstantCommand(() -> speedingUpVoltage(constantShooter, 0.2))
         .until(() -> constantShooter.getMotorVoltage().getValueAsDouble() >= 3.8).alongWith(
             new InstantCommand(() -> speedingUpVoltage(shooter, 0.4))
                 .until(() -> shooter.getMotorVoltage().getValueAsDouble() >= 3.8)));
