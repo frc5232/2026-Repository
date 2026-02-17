@@ -4,7 +4,7 @@
 
 package frc.robot;
 
-import org.ironmaple.simulation.SimulatedArena;
+//import org.ironmaple.simulation.SimulatedArena;
 
 import com.ctre.phoenix6.HootAutoReplay;
 
@@ -83,6 +83,6 @@ public class Robot extends TimedRobot {
 
     @Override
     public void simulationPeriodic() {
-        SimulatedArena.getInstance().simulationPeriodic();
+       // SimulatedArena.getInstance().simulationPeriodic();
     }
 }

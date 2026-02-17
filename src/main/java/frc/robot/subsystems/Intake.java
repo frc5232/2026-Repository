@@ -6,11 +6,11 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
 import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 //encoder
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -20,12 +20,12 @@ import frc.robot.Constants;
 public class Intake extends SubsystemBase {
   /** Creates a new Intake. */
   public DutyCycleEncoder absoluteEncoder;
-  private boolean startingPosition;
+  
   private TalonFX moveToFloorTalonFX;
-  private TalonFX closesTalonFX;
+  private TalonFX spinningMotor;
   private double encoderConstant;
   private double encoderDownPos;
-  private PIDController pidController;
+ 
 
   public Intake() {
 
@@ -34,7 +34,7 @@ public class Intake extends SubsystemBase {
     
     moveToFloorTalonFX.getConfigurator().apply(Constants.talonIntakeCon.INTAKE_MOTOR_CONFIG);
 
-    closesTalonFX = new TalonFX(Constants.talonIntakeCon.SPIN_MOTOR_ID);
+    spinningMotor = new TalonFX(Constants.talonIntakeCon.SPIN_MOTOR_ID);
     // our upper position
     encoderConstant = 0.62;
     // our down positon
@@ -48,8 +48,8 @@ public class Intake extends SubsystemBase {
    */
   public Command goToDownPositionCommand() {
     return new InstantCommand(() -> moveToFloorTalonFX
-        .setControl(new MotionMagicExpoVoltage(moveToFloorTalonFX.getPosition().getValueAsDouble() + 0.1)));
-        //.until(() -> atDownPosition())
+        .setControl(new MotionMagicExpoVoltage(moveToFloorTalonFX.getPosition().getValueAsDouble() + 0.1)))
+        .until(() -> atDownPosition());
   }
 
   /*
@@ -59,8 +59,8 @@ public class Intake extends SubsystemBase {
    */
   public Command gotoStartPositonCommand() {
     return new InstantCommand(() -> moveToFloorTalonFX
-          .setControl(new PositionVoltage(moveToFloorTalonFX.getPosition().getValueAsDouble() - 0.1)));
-    //.until(() -> atStartingPosition()
+          .setControl(new PositionVoltage(moveToFloorTalonFX.getPosition().getValueAsDouble() - 0.1)))
+    .until(() -> atStartingPosition());
   }
 
   /*
@@ -116,12 +116,33 @@ public class Intake extends SubsystemBase {
       return false;
     }
   }
-
+  /**
+   * 
+   * @param amountToGoTill the value we want it to spin until it hits this speed
+   * @param amountToIncreaseBy the amount it should increase by every time its calld
+   */
+  private void startSpinningMotor(double amountToGoTill, double amountToIncreaseBy){
+    new InstantCommand(()-> spinningMotor.setControl(new VelocityVoltage(spinningMotor.getVelocity().getValueAsDouble() + amountToIncreaseBy)))
+    .until(()-> spinningMotor.getVelocity().getValueAsDouble() >= amountToGoTill);
+  }
+  /**
+   * 
+   * @param amountToGotill amount to slow down until its less then or equal to
+   * @param amountToDereaseBy the amount to decrease by every time its called
+   */
+  private void slowDownSpinningMotor(double amountToGotill, double amountToDereaseBy){
+    new InstantCommand(()-> spinningMotor.setControl(new VelocityVoltage(spinningMotor.getVelocity().getValueAsDouble() - amountToDereaseBy)))
+    .until(()-> spinningMotor.getVelocity().getValueAsDouble() <= amountToGotill);
+  }
+  /**
+   * Only call when its already at a low velocity voltage or in emergency
+   */
+  private void stopSpinMotor(){
+    spinningMotor.setControl(new VelocityVoltage(0));
+  }
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
     publishPosition();
-    // SmartDashboard.putNumber("position of intake motor",
-    // moveToFloorTalonFX.getPosition().getValueAsDouble());
+    
   }
 }

@@ -39,10 +39,8 @@ public class Aiming extends SubsystemBase {
       // doing a angle calulation
       double xx = (x * Math.sin(90)) / Math.sqrt((x * x + y * y));
 
-      // if((currentPose.getY() < 4 && currentPose.getX() > 7) || (currentPose.getY()
-      // > 4 && currentPose.getX() < 7)){
-      // xx = -xx;
-      // }
+      //tsting theta idea from herstad in discord
+      yawHeading = currentPose.getRotation().getDegrees() + xx;
       // for blue alliance
       if (currentPose.getX() > 7) {
         if (currentPose.getY() < 4) {
@@ -63,10 +61,10 @@ public class Aiming extends SubsystemBase {
           yawHeading = 180 + xx;
         }
       }
-
+     if(Math.abs(currentPose.getX() - staticHubPose2d.getX()) < 5){
       new SequentialCommandGroup(drivetrainAiming.applyRequest(() -> drive.withRotationalRate(4))
           .until(() -> yawheadChecker(drivetrainAiming.getState().RawHeading.getDegrees(), yawHeading)));
-
+     }
     }
 
     // then constantly update it so we can drive and aim auto while shooting until
