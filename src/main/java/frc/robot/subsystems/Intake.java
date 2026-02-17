@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.PivotMotor;
 
 public class Intake extends SubsystemBase {
   /** Creates a new Intake. */
@@ -28,7 +29,6 @@ public class Intake extends SubsystemBase {
  
 
   public Intake() {
-
     moveToFloorTalonFX = new TalonFX(8);
     absoluteEncoder = new DutyCycleEncoder(0);
     
@@ -121,8 +121,8 @@ public class Intake extends SubsystemBase {
    * @param amountToGoTill the value we want it to spin until it hits this speed
    * @param amountToIncreaseBy the amount it should increase by every time its calld
    */
-  private void startSpinningMotor(double amountToGoTill, double amountToIncreaseBy){
-    new InstantCommand(()-> spinningMotor.setControl(new VelocityVoltage(spinningMotor.getVelocity().getValueAsDouble() + amountToIncreaseBy)))
+  public Command startSpinningMotor(double amountToGoTill, double amountToIncreaseBy){
+    return new InstantCommand(()-> spinningMotor.setControl(new VelocityVoltage(spinningMotor.getVelocity().getValueAsDouble() + amountToIncreaseBy)))
     .until(()-> spinningMotor.getVelocity().getValueAsDouble() >= amountToGoTill);
   }
   /**
@@ -130,9 +130,10 @@ public class Intake extends SubsystemBase {
    * @param amountToGotill amount to slow down until its less then or equal to
    * @param amountToDereaseBy the amount to decrease by every time its called
    */
-  private void slowDownSpinningMotor(double amountToGotill, double amountToDereaseBy){
-    new InstantCommand(()-> spinningMotor.setControl(new VelocityVoltage(spinningMotor.getVelocity().getValueAsDouble() - amountToDereaseBy)))
-    .until(()-> spinningMotor.getVelocity().getValueAsDouble() <= amountToGotill);
+  public Command slowDownSpinningMotor(double amountToGotill, double amountToDereaseBy){
+    return new InstantCommand(()-> spinningMotor.setControl(new VelocityVoltage(spinningMotor.getVelocity().getValueAsDouble() - amountToDereaseBy)))
+    .until(()-> spinningMotor.getVelocity().getValueAsDouble() <= amountToGotill).andThen(()->stopSpinMotor());
+    
   }
   /**
    * Only call when its already at a low velocity voltage or in emergency

@@ -53,7 +53,7 @@ public class Intake {
         return null;
     }
 
-    public static TalonFX getAPivotMotorByName(String name) {
+    public static TalonFX getAPivotMotor(String name) {
         for (int i = 0; i < arrayOfPivotMotors.size(); i++) {
             if (arrayOfPivotMotors.get(i).getDescription() == name) {
                 return arrayOfPivotMotors.get(i);
@@ -71,7 +71,7 @@ public class Intake {
         return null;
     }
 
-    public static TalonFX getASpinMotorByName(String name) {
+    public static TalonFX getASpinMotor(String name) {
         for (int i = 0; i < arrayOfIntakeSpinMotors.size(); i++) {
             if (arrayOfIntakeSpinMotors.get(i).getDescription() == name) {
                 return arrayOfIntakeSpinMotors.get(i);
@@ -79,17 +79,62 @@ public class Intake {
         }
         return null;
     }
-    public static ArrayList<TalonFX> getAllSpinMotors(){
+
+    public static ArrayList<TalonFX> getAllSpinMotors() {
         return arrayOfIntakeSpinMotors;
     }
-    public static ArrayList<TalonFX> getAllPivotMotors(){
+
+    public static ArrayList<TalonFX> getAllPivotMotors() {
         return arrayOfPivotMotors;
     }
+
+    public static void removePivotMotor(String name) {
+        for (int i = 0; i < arrayOfPivotMotors.size(); i++) {
+            if (arrayOfPivotMotors.get(i).getDescription() == name) {
+                arrayOfPivotMotors.remove(i);
+                arrayOfIntakePivotMotorIds.remove(i);
+                arrayOfIntakePivotMotorIds.remove(i);
+                break;
+            }
+        }
+    }
+
+    public static void removePivotMotor(int id) {
+        for (int i = 0; i < arrayOfPivotMotors.size(); i++) {
+            if (arrayOfPivotMotors.get(i).getDeviceID() == id) {
+                arrayOfPivotMotors.remove(i);
+                arrayOfIntakePivotMotorIds.remove(i);
+                arrayOfIntakePivotMotorIds.remove(i);
+            }
+        }
+    }
+
+    public static void removeSpinMotor(int id) {
+        for (int i = 0; i < arrayOfIntakeSpinMotors.size(); i++) {
+            if (arrayOfIntakeSpinMotors.get(i).getDeviceID() == id) {
+                arrayOfIntakeSpinMotorIds.remove(i);
+                arrayOfIntakeSpinMotorNames.remove(i);
+                arrayOfIntakeSpinMotors.remove(i);
+            }
+        }
+    }
+
+    public static void removeSpinMotor(String name) {
+        for (int i = 0; i < arrayOfIntakeSpinMotors.size(); i++) {
+            if (arrayOfIntakeSpinMotors.get(i).getDescription() == name) {
+                arrayOfIntakeSpinMotorIds.remove(i);
+                arrayOfIntakeSpinMotorNames.remove(i);
+                arrayOfIntakeSpinMotors.remove(i);
+                break;
+            }
+        }
+    }
+
     public Intake(ArrayList<TalonFX> spinMotors, ArrayList<TalonFX> pivotMotors) {
         arrayOfIntakeSpinMotors = spinMotors;
         arrayOfPivotMotors = pivotMotors;
     }
-    
+
     public Intake() {
         this(new ArrayList<TalonFX>(), new ArrayList<TalonFX>());
     }

@@ -113,16 +113,15 @@ public class RobotContainer {
         // joystick.x().onChange(new InstantCommand(()->mIntake.goalPos()));
 
 
-         joystick.x().whileTrue(climberSubsystem.climbUp());
-         joystick.y().whileTrue(climberSubsystem.climbDown());
-         joystick.pov(0).whileTrue(climberSubsystem.climbUp());
-         joystick.pov(90).whileTrue(climberSubsystem.climbDown());
+        //  joystick.x().whileTrue(climberSubsystem.climbUp());
+        //  joystick.y().whileTrue(climberSubsystem.climbDown());
+        //  joystick.pov(0).whileTrue(climberSubsystem.climbUp());
+        //  joystick.pov(90).whileTrue(climberSubsystem.climbDown());
 
 
-        // joystick.x().whileTrue(intakeSubsystem.goToDownPositionCommand());
-        // joystick.pov(0).whileTrue(intakeSubsystem.goToDownPositionCommand());
-        // joystick.y().whileTrue(intakeSubsystem.gotoStartPositonCommand());
-        // joystick.pov(90).whileTrue(intakeSubsystem.gotoStartPositonCommand());
+        // 
+        joystick.pov(0).onTrue(shooterSubsysem.shootWithDutyCycle());
+        
     }
 
     public Command getAutonomousCommand() {
