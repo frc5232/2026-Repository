@@ -11,19 +11,23 @@ public class Intake {
     private static ArrayList<Integer> arrayOfIntakeSpinMotorIds;
     private static ArrayList<String> arrayOfIntakePivotMotorNames;
     private static ArrayList<Integer> arrayOfIntakePivotMotorIds;
-
+    private static Throwable addingThrowable = new Throwable("Wrong type of motor it should be TalonFX");
     public static void addASpinMotor(TalonFX intakeMotor) {
         arrayOfIntakeSpinMotors.add(intakeMotor);
         arrayOfIntakeSpinMotorNames.add(intakeMotor.getDescription());
         arrayOfIntakeSpinMotorIds.add(intakeMotor.getDeviceID());
     }
 
-    public static void addMultiplePivotMotors(ArrayList<TalonFX> listOfPivotMotors) {
+    public static void addMultiplePivotMotors(ArrayList<TalonFX> listOfPivotMotors)throws Throwable{
+        
         for (int i = 0; i < listOfPivotMotors.size(); i++) {
-
+            if(listOfPivotMotors.get(i).equals(new TalonFX(listOfPivotMotors.get(i).getDeviceID()))){
             arrayOfPivotMotors.add(listOfPivotMotors.get(i));
             arrayOfIntakePivotMotorIds.add(listOfPivotMotors.get(i).getDeviceID());
             arrayOfIntakePivotMotorNames.add(listOfPivotMotors.get(i).getDescription());
+        }else{
+            Throwable mThrowable = new Throwable("wrong motor type at " + i , addingThrowable);
+        }
 
         }
     }
@@ -38,19 +42,25 @@ public class Intake {
         }
     }
 
-    public static void addAPivotMotor(TalonFX pivotMotor) {
+    public static void addAPivotMotor(TalonFX pivotMotor) throws Throwable{
+        if(pivotMotor.equals(new TalonFX(pivotMotor.getDeviceID())) == true){
         arrayOfPivotMotors.add(pivotMotor);
         arrayOfIntakePivotMotorIds.add(pivotMotor.getDeviceID());
-        arrayOfIntakePivotMotorNames.add(pivotMotor.getDescription());
+        arrayOfIntakePivotMotorNames.add(pivotMotor.getDescription());}
+        throw addingThrowable;
     }
 
-    public static TalonFX getAPivotMotor(int pivotMotorId) {
+    public static TalonFX getAPivotMotor(int pivotMotorId) throws Throwable{
+        Throwable eThrowable = new Throwable("Does not exist within object\n Error at method :" + checkWhichMethod(1));
         for (int i = 0; i < arrayOfPivotMotors.size(); i++) {
             if (arrayOfPivotMotors.get(i).getDeviceID() == pivotMotorId) {
                 return arrayOfPivotMotors.get(i);
+                /**
+                 * temp array of ints of position values
+                 */
             }
         }
-        return null;
+       throw eThrowable;
     }
 
     public static TalonFX getAPivotMotor(String name) {
@@ -129,7 +139,14 @@ public class Intake {
             }
         }
     }
-
+    private static String checkWhichMethod(int methodNumber){
+        switch(methodNumber){
+            case 1:
+                return "getAPivotMotor()";
+            default :
+            return "not found";
+        }
+    }
     public Intake(ArrayList<TalonFX> spinMotors, ArrayList<TalonFX> pivotMotors) {
         arrayOfIntakeSpinMotors = spinMotors;
         arrayOfPivotMotors = pivotMotors;
