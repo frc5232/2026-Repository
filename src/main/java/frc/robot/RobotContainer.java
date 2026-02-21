@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 import frc.robot.generated.TunerConstants;
+import frc.robot.generated.tunerConstantsForChompsNov25;
 import frc.robot.subsystems.Aiming;
 import frc.robot.subsystems.Auto;
 import frc.robot.subsystems.Climber;
@@ -27,12 +28,12 @@ import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Vision;
 
 public class RobotContainer {
-    private SlewRateLimiter xAxisRateLimiter = new SlewRateLimiter(0.75);
-    private SlewRateLimiter yAxisRateLimiter = new SlewRateLimiter(0.75);
+    private SlewRateLimiter xAxisRateLimiter = new SlewRateLimiter(1.0);
+    private SlewRateLimiter yAxisRateLimiter = new SlewRateLimiter(1.0);
     private SlewRateLimiter rotationRateLimiter = new SlewRateLimiter(0.75);
-    private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
+    private double MaxSpeed = 0.5 * tunerConstantsForChompsNov25.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
                                                                                         // speed
-    private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second
+    private double MaxAngularRate = RotationsPerSecond.of(1.0).in(RadiansPerSecond); // 3/4 of a rotation per second
                                                                                       // max angular velocity
 
     /* Setting up bindings for necessary control of the swerve drive platform */
@@ -46,7 +47,7 @@ public class RobotContainer {
 
     private final CommandXboxController joystick = new CommandXboxController(0);
 
-    public final CommandSwerveDrivetrain drivetrainSubsystem = TunerConstants.createDrivetrain();
+    public final CommandSwerveDrivetrain drivetrainSubsystem = tunerConstantsForChompsNov25.createDrivetrain();
 
     // private final Vision visionSubsystem = new Vision(drivetrain);
     // private final Auto autoSubsystem = new Auto(drivetrain,drive);
@@ -67,12 +68,12 @@ public class RobotContainer {
                 // Drivetrain will execute this command periodically
 
                 drivetrainSubsystem.applyRequest(() -> drive
-                        .withVelocityX(xAxisRateLimiter.calculate(-joystick.getLeftY()) * MaxSpeed) // Drive forward
+                        .withVelocityX(-joystick.getLeftY() * MaxSpeed)//xAxisRateLimiter.calculate(-joystick.getLeftY()) * MaxSpeed) // Drive forward
                                                                                                     // with negative Y
                                                                                                     // (forward)
-                        .withVelocityY(yAxisRateLimiter.calculate(-joystick.getLeftX()) * MaxSpeed) // Drive left with
+                        .withVelocityY(-joystick.getLeftX() * MaxSpeed)//yAxisRateLimiter.calculate(-joystick.getLeftX()) * MaxSpeed) // Drive left with
                                                                                                     // negative X (left)
-                        .withRotationalRate(rotationRateLimiter.calculate(joystick.getRightX()) * MaxAngularRate) // Drive
+                        .withRotationalRate(-joystick.getRightX() * MaxAngularRate)//rotationRateLimiter.calculate(-joystick.getRightX()) * MaxAngularRate) // Drive
                                                                                                                   // counterclockwise
                                                                                                                   // with
                                                                                                                   // NOT
@@ -120,7 +121,7 @@ public class RobotContainer {
 
 
         // 
-        joystick.pov(0).onTrue(shooterSubsysem.shootWithDutyCycle());
+        joystick.pov(0).toggleOnTrue(shooterSubsysem.shootWithDutyCycle()).toggleOnFalse(shooterSubsysem.slowDownDutyCycle());
         
     }
 

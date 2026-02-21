@@ -36,9 +36,9 @@ public class Intake extends SubsystemBase {
 
     spinningMotor = new TalonFX(Constants.talonIntakeCon.SPIN_MOTOR_ID);
     // our upper position
-    encoderConstant = 0.62;
+    encoderConstant = Constants.talonIntakeCon.ENCODER_STARTING_POSITION;
     // our down positon
-    encoderDownPos = 0.93;
+    encoderDownPos = Constants.talonIntakeCon.ENCODER_DOWN_POSITION;
 
   }
 

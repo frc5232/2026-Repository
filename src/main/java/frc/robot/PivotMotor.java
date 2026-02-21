@@ -39,5 +39,7 @@ public class PivotMotor {
     public static void goToPositionInDegreesUsingPositionVoltage(double degreesToGoTo){
         pivotMotorTalon.setControl(new PositionVoltage(Units.degreesToRotations(degreesToGoTo)));
     }
-
+    public TalonFX getPivotMotor(){
+        return pivotMotorTalon;
+    }
 }

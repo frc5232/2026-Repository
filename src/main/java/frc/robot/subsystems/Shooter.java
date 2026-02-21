@@ -67,18 +67,26 @@ public class Shooter extends SubsystemBase {
    * @param amountToDerease amount to decrase it by every time its called
    */
   private void slowDownVelocity(TalonFX mTalonFX, double amountToDerease){
-    mTalonFX.setControl(new VelocityVoltage(mTalonFX.getVelocity().getValueAsDouble() - amountToDerease));
+  
+    new InstantCommand(()->mTalonFX.setControl(new VelocityVoltage(mTalonFX.getVelocity().getValueAsDouble() - amountToDerease)));
   }
-  public Command shoot(){
-    return new InstantCommand(()->{shooter.setControl(new DutyCycleOut(-0.5));constantShooter.setControl(new DutyCycleOut(0.5));    constantShooter2.setControl(new DutyCycleOut(-0.5));});
+  public Command slowDownDutyCycle(){
+    return new SequentialCommandGroup(new InstantCommand(()->slowDownCycle(shooter,0.1,0.1)),
+    new InstantCommand(()->slowDownCycle(constantShooter, -0.1, -0.5)),
+     new InstantCommand(()->  slowDownCycle(constantShooter2, 0.1, 0.5)));
+    }
     
+  
+  private void slowDownCycle(TalonFX mFx,double speed,double goalSpeed){
+    new InstantCommand(()->mFx.setControl(new DutyCycleOut(shooter.getDutyCycle().getValueAsDouble() - speed))).until(()-> goalSpeed > 0 ? mFx.getDutyCycle().getValueAsDouble() <= goalSpeed : mFx.getDutyCycle().getValueAsDouble() >= goalSpeed);
   }
   private void speedUpDutyCycle(TalonFX mFx, double speed){
     mFx.setControl(new DutyCycleOut(mFx.getDutyCycle().getValueAsDouble() + speed));
   }
   public Command shootWithDutyCycle(){
-    return new SequentialCommandGroup(new InstantCommand(()->speedUpDutyCycle(shooter, -0.08)).until(()-> shooter.getDutyCycle().getValueAsDouble() <= -0.8)
-    .alongWith(new InstantCommand(()-> {speedUpDutyCycle(constantShooter, 0.08);speedUpDutyCycle(constantShooter2, -0.05);}).until(()->constantShooter.getDutyCycle().getValueAsDouble() >= 0.8 && constantShooter2.getDutyCycle().getValueAsDouble() <= -0.8)));
+    return new SequentialCommandGroup(new InstantCommand(()->speedUpDutyCycle(shooter, -0.1)).until(()-> shooter.getDutyCycle().getValueAsDouble() <= -0.9)
+    .alongWith(new InstantCommand(()-> speedUpDutyCycle(constantShooter, 0.1)).until(()-> constantShooter.getDutyCycle().getValueAsDouble()>= 0.9))
+    .alongWith(new InstantCommand(()-> speedUpDutyCycle(constantShooter2, -0.1)).until(()-> constantShooter2.getDutyCycle().getValueAsDouble() <= -0.9)));
   }
   
   /**
