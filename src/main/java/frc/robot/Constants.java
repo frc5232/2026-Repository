@@ -4,15 +4,11 @@
 
 package frc.robot;
 
-import java.time.chrono.MinguoChronology;
-
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.motorcontrol.Talon;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide
@@ -64,5 +60,11 @@ public final class Constants {
 
     }
 
+  }
+  public class shooterMotorCon{
+    public static final TalonFXConfiguration CONSTANT_MOTOR_CONFIG = new TalonFXConfiguration();
+    static{
+      CONSTANT_MOTOR_CONFIG.Slot0.kP = 1;
+    }
   }
 }

@@ -9,9 +9,16 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 
 public class SpinMotor {
     private static TalonFX spinMotorTalon;
+    /**
+     * 
+     * @param spinMotor a talon Fx to make into our spin motor
+     */
     public SpinMotor(TalonFX spinMotor){
         spinMotorTalon = spinMotor;
     }
+    /**
+     * A default constructor to create a new spin motor with an id of 0
+     */
     public SpinMotor(){
         this(new TalonFX(0));
     }
@@ -57,7 +64,11 @@ public class SpinMotor {
         return new InstantCommand(()-> spinMotorTalon.setControl(new DutyCycleOut(spinMotorTalon.getDutyCycle().getValueAsDouble() - slowDownAmount)))
         .until(()-> bottomGoal > 0 ? bottomGoal <= spinMotorTalon.getDutyCycle().getValueAsDouble() : bottomGoal >= spinMotorTalon.getDutyCycle().getValueAsDouble());
     }
-    public Command stopMotor(){
+    /**
+     * 
+     * @return a command to stop the motor when its calld with duty cycle
+     */
+    public Command stopMotorWhenRunningWithDutyCycle(){
         return new InstantCommand(()-> spinMotorTalon.setControl(new DutyCycleOut(0)));
     }
 }

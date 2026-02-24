@@ -4,7 +4,6 @@
 
 package frc.robot;
 
-//import org.ironmaple.simulation.SimulatedArena;
 
 import com.ctre.phoenix6.HootAutoReplay;
 

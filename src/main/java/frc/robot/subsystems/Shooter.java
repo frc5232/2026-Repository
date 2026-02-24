@@ -4,85 +4,130 @@
 
 package frc.robot.subsystems;
 
+import org.opencv.objdetect.RefineParameters;
+
+import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.controls.DutyCycleOut;
+import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.StrictFollower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 
 import edu.wpi.first.wpilibj.motorcontrol.Talon;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 
 public class Shooter extends SubsystemBase {
   /** Creates a new Shooter. */
   private TalonFX constantShooter;
   private TalonFX shooter;
   private TalonFX constantShooter2;
+  private double targetFlywheelRPS = 40;
+  private VelocityVoltage mRequest = new VelocityVoltage(0);
   public Shooter() {
     /**
      * Look into making it into a .withvelovity instead of voltage come testing time
      */
+    /**
+     * our bottom shooter
+     */
     shooter = new TalonFX(0);
-    constantShooter = new TalonFX(1);
-    constantShooter2 = new TalonFX(6);
+    //the first shooter motor that we spin up constantly
+    constantShooter = new TalonFX(6);
+    // the second shooter motor that we spin up constantly
+    constantShooter2 = new TalonFX(1);
+    
+    constantShooter2.getConfigurator().apply(Constants.shooterMotorCon.CONSTANT_MOTOR_CONFIG);
+   // constantShooter.getConfigurator().apply(Constants.shooterMotorCon.CONSTANT_MOTOR_CONFIG);
+    constantShooter.setControl(new Follower(constantShooter2.getDeviceID(), MotorAlignmentValue.Opposed));
+   //  targetFlywheelRPS = 40;
+    // mRequest.Slot = 0;
   }
-
+  /*
   /**
    * 
-   * @return a sequentail command group to spin up both motors until there spinning at 60 rps
+   *
    */
-  public Command shootOutWithVelocity(){
-    return new SequentialCommandGroup(new InstantCommand(()-> speedUpVelocity(constantShooter, 2))
-    .until(()-> constantShooter.getVelocity().getValueAsDouble() >= 40).alongWith(new InstantCommand(()->
-    speedUpVelocity(shooter, 4))).until(()-> shooter.getVelocity().getValueAsDouble() >=40).alongWith(
-      new InstantCommand(()-> speedUpVelocity(constantShooter2,4 )).until(()->constantShooter2.getVelocity().getValueAsDouble() >= 40)
-    ));
+  public void shootOutWithVelocity(){
+    speedUpVelocity(constantShooter2, targetFlywheelRPS); //.alongWith(speedUpVelocity(constantShooter2, targetFlywheelRPS).until(()-> constantShooter2.getVelocity().getValueAsDouble() >= targetFlywheelRPS)
+    speedUpVelocity(shooter, targetFlywheelRPS);//.until(()-> shooter.getVelocity().getValueAsDouble() >= targetFlywheelRPS);
+    
+    
   }
   /**
    * slows down both of them by 2 rps until they are less then 10 which then i will call the stopvelocity on th non constant one
    */
-  private void stopShootingWithVelocity(){
-    new SequentialCommandGroup(new InstantCommand(()-> slowDownVelocity(constantShooter, 2))
-    .until(()-> constantShooter.getVelocity().getValueAsDouble() <= 10).alongWith(new InstantCommand(()->
-    slowDownVelocity(shooter, 2))).until(()->shooter.getVelocity().getValueAsDouble() <= 10)).alongWith(
-      new InstantCommand(()-> slowDownVelocity(constantShooter2, 2)).until(()-> constantShooter2.getVelocity().getValueAsDouble() <=10));
-    
+  public void stopShootingWithVelocity(){
+    slowDownVelocity(constantShooter, 5)
+    .until(()-> constantShooter.getVelocity().getValueAsDouble() <= 10);
+    slowDownVelocity(constantShooter, 10)
+    .until(()->shooter.getVelocity().getValueAsDouble() <= 10);
+    slowDownVelocity(constantShooter2, 5)
+      .until(()-> constantShooter2.getVelocity().getValueAsDouble() <=10);
     stopSpinningMotorVelocity(shooter);
+    
     }
 
   /**
    * 
    * @param mTalonFX our talon to spin up
-   * @param increaseAmount amount to increase by every time called
+   * @param goalAmount our goal amount
    * 
    */
-  private void speedUpVelocity(TalonFX mTalonFX, double increaseAmount){
-    mTalonFX.setControl(new VelocityVoltage(mTalonFX.getVelocity().getValueAsDouble() + increaseAmount));
+  private Command speedUpVelocity(TalonFX mTalonFX, double goalAmount){
+    return runOnce(()->
+     mTalonFX.setControl(new VelocityVoltage(goalAmount)));//.until(()->mTalonFX.getVelocity().getValueAsDouble() >= goalAmount);
+     //).until(()->mTalonFX.getVelocity().getValueAsDouble() >= goalAmount);
   }
+  
+  
   
   /**
    * 
    * @param mTalonFX our talonfx to slow down
    * @param amountToDerease amount to decrase it by every time its called
    */
-  private void slowDownVelocity(TalonFX mTalonFX, double amountToDerease){
-  
-    new InstantCommand(()->mTalonFX.setControl(new VelocityVoltage(mTalonFX.getVelocity().getValueAsDouble() - amountToDerease)));
+  private Command slowDownVelocity(TalonFX mTalonFX, double goalAmount){
+    return runOnce(()->
+    mTalonFX.setControl(mRequest.withVelocity(goalAmount)));
+    //).until(()-> mTalonFX.getVelocity().getValueAsDouble() <= goalAmount);
   }
+  /**
+   * 
+   * @return a squental command group to slow it down by the values we want
+   */
   public Command slowDownDutyCycle(){
     return new SequentialCommandGroup(new InstantCommand(()->slowDownCycle(shooter,0.1,0.1)),
     new InstantCommand(()->slowDownCycle(constantShooter, -0.1, -0.5)),
      new InstantCommand(()->  slowDownCycle(constantShooter2, 0.1, 0.5)));
     }
     
-  
+  /**
+   * 
+   * @param mFx Our talon fx we want to slow down
+   * @param speed our speed to slow it down by every time its called
+   * @param goalSpeed our slow speed we want to hit
+   */
   private void slowDownCycle(TalonFX mFx,double speed,double goalSpeed){
     new InstantCommand(()->mFx.setControl(new DutyCycleOut(shooter.getDutyCycle().getValueAsDouble() - speed))).until(()-> goalSpeed > 0 ? mFx.getDutyCycle().getValueAsDouble() <= goalSpeed : mFx.getDutyCycle().getValueAsDouble() >= goalSpeed);
   }
+  /**
+   * 
+   * @param mFx our talon fx to speed up
+   * @param speed the speed to speed it up by
+   */
   private void speedUpDutyCycle(TalonFX mFx, double speed){
     mFx.setControl(new DutyCycleOut(mFx.getDutyCycle().getValueAsDouble() + speed));
   }
+  /**
+   * 
+   * @return a sequentail command group with all the values to go till
+   */
   public Command shootWithDutyCycle(){
     return new SequentialCommandGroup(new InstantCommand(()->speedUpDutyCycle(shooter, -0.1)).until(()-> shooter.getDutyCycle().getValueAsDouble() <= -0.9)
     .alongWith(new InstantCommand(()-> speedUpDutyCycle(constantShooter, 0.1)).until(()-> constantShooter.getDutyCycle().getValueAsDouble()>= 0.9))
@@ -95,7 +140,7 @@ public class Shooter extends SubsystemBase {
    * only call when its already slowed down significantly or in emeergency situtations
    */
   private void stopSpinningMotorVelocity(TalonFX mFx){
-    mFx.setControl(new VelocityVoltage(0));
+   // mFx.setControl(mRequest.withVelocity(0));
   }
   @Override
   public void periodic() {
