@@ -4,7 +4,9 @@
 
 package frc.robot.subsystems;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.VecBuilder;
@@ -39,7 +41,9 @@ public class Auto extends SubsystemBase {
   private ChassisSpeeds chassisSpeeds;
   private ArrayList<Double> xValueForWayPoints = new ArrayList<>();
   private ArrayList<Double> yValueForWayPoints = new ArrayList<>();
-
+  private  List<Translation2d> mList;
+  private double[] rotationValues;
+  private boolean firstStage = true;
   public Auto(CommandSwerveDrivetrain drivetrain, SwerveRequest.FieldCentric mCentric) {
     drivetrainAuto = drivetrain;
     drive = mCentric;
@@ -75,8 +79,12 @@ public class Auto extends SubsystemBase {
     // mList.add(i, new
     // Translation2d(xValueForWayPoints.get(i),yValueForWayPoints.get(i)));
     // }
+   
+    for (int i = 0; i < xValueForWayPoints.size(); i++) {
+      mList.add(new Translation2d(xValueForWayPoints.get(i),yValueForWayPoints.get(i)));
+    }
     trajectory = TrajectoryGenerator.generateTrajectory(c,
-        List.of(new Translation2d(xValueForWayPoints.get(0), yValueForWayPoints.get(0))), g, trajectoryConfig);
+        mList, g, trajectoryConfig);
     return trajectory;
   }
 
@@ -101,7 +109,7 @@ public class Auto extends SubsystemBase {
    * 
    * @param mSpeeds our chassis speeds getting passed into the drivetrain
    */
-  private void followAuto(ChassisSpeeds mSpeeds) {
+  private boolean followAuto(ChassisSpeeds mSpeeds) {
     /**
      * Making chassisSpeeds using our controller and how far we are in the
      * trajectory
@@ -119,12 +127,17 @@ public class Auto extends SubsystemBase {
     if (checking(currentPose2d, goalPose2d, 'r')) {
       mSpeeds.omegaRadiansPerSecond = 0;
     }
+    if(mSpeeds.omegaRadiansPerSecond == 0 && mSpeeds.vxMetersPerSecond ==0 && mSpeeds.vyMetersPerSecond == 0){
+      return false;
+    }
     new SequentialCommandGroup(new InstantCommand(
         () -> drivetrainAuto.applyRequest(() -> drive.withVelocityX(mSpeeds.vxMetersPerSecond)))
         .alongWith(
             new InstantCommand(() -> drivetrainAuto.applyRequest(() -> drive.withVelocityY(mSpeeds.vyMetersPerSecond)))
                 .alongWith(new InstantCommand(
-                    () -> drivetrainAuto.applyRequest(() -> drive.withRotationalRate(mSpeeds.omegaRadiansPerSecond))))));
+                    () -> drivetrainAuto
+                        .applyRequest(() -> drive.withRotationalRate(mSpeeds.omegaRadiansPerSecond))))));
+    return true;
 
   }
 
@@ -141,35 +154,42 @@ public class Auto extends SubsystemBase {
    */
 
   public Pose2d PickAutoToRun() {
-    // for blue
+    double x = currentPose2d.getX();
+    double y = currentPose2d.getY();
+    if (x > 7) {
+      if (y < 3) {
 
-    // for red
+      } else if (y > 5) {
 
-    if (currentPose2d.getX() > 7) {
-      // if(currentPose2d.getY() > 5){
+      } else {
 
-      // }else if(currentPose2d.getY() < 3){
-
-      // }
-
-      goalPose2d = new Pose2d(edu.wpi.first.math.util.Units.inchesToMeters(651),
-          edu.wpi.first.math.util.Units.inchesToMeters(124), new Rotation2d(180));
-      // mList.add(0, new Translation2d(goalPose2d.getX() + 0.25,goalPose2d.getY() +
-      // 0.25));
-      xValueForWayPoints.add(0, goalPose2d.getX() + 0.5);
-      yValueForWayPoints.add(0, goalPose2d.getY() + 0.5);
+      }
     } else {
-      // if(currentPose2d.getY() > 5){
+      if (y < 3) {
 
-      // }else if(currentPose2d.getY() < 3){
+      } else if (y > 5) {
+        goalPose2d = new Pose2d(7.724, 6.457, new Rotation2d(-90));
+        
+        while(firstStage == true){
+          firstStage = followAuto(mGenSpeeds(trejGen(currentPose2d, goalPose2d), ltvController));
+        };
+        xValueForWayPoints.add(7.724);
+        xValueForWayPoints.add(7.724);
+        xValueForWayPoints.add(7.724);
+        xValueForWayPoints.add(7.724);
+        xValueForWayPoints.add(5.704);
+        yValueForWayPoints.add(6.457);
+        yValueForWayPoints.add(5.663);
+        yValueForWayPoints.add(4.715);
+        yValueForWayPoints.add(3.953);
+        yValueForWayPoints.add(5.158);
+        
+        
+        goalPose2d = new Pose2d(2.921, 5.158, new Rotation2d(-90));
+        
+      } else {
 
-      // }
-      goalPose2d = new Pose2d(edu.wpi.first.math.util.Units.inchesToMeters(46.5),
-          edu.wpi.first.math.util.Units.inchesToMeters(146.86), new Rotation2d(0));
-      // mList.add(0, new Translation2d(goalPose2d.getX() + 0.25,goalPose2d.getY() +
-      // 0.25));
-      xValueForWayPoints.add(0, goalPose2d.getX() + 0.5);
-      yValueForWayPoints.add(0, goalPose2d.getY() + 0.5);
+      }
     }
     autoHasBeenPicked = true;
     trejGen(currentPose2d, goalPose2d);
