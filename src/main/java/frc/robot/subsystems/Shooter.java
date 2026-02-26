@@ -27,7 +27,7 @@ public class Shooter extends SubsystemBase {
   private TalonFX constantShooter;
   private TalonFX shooter;
   private TalonFX constantShooter2;
-  private double targetFlywheelRPS = 40;
+  private double targetFlywheelRPS;
   private VelocityVoltage mRequest = new VelocityVoltage(0);
   public Shooter() {
     /**
@@ -42,30 +42,34 @@ public class Shooter extends SubsystemBase {
     // the second shooter motor that we spin up constantly
     constantShooter2 = new TalonFX(1);
     
-    constantShooter2.getConfigurator().apply(Constants.shooterMotorCon.CONSTANT_MOTOR_CONFIG);
-   // constantShooter.getConfigurator().apply(Constants.shooterMotorCon.CONSTANT_MOTOR_CONFIG);
-    constantShooter.setControl(new Follower(constantShooter2.getDeviceID(), MotorAlignmentValue.Opposed));
-   //  targetFlywheelRPS = 40;
-    // mRequest.Slot = 0;
+    constantShooter2.getConfigurator().apply(Constants.shooterMotorCon.CONSTANT_MOTOR2_CONFIG);
+    constantShooter.getConfigurator().apply(Constants.shooterMotorCon.CONSTANT_MOTOR_CONFIG);
+   // constantShooter.setControl(new Follower(constantShooter2.getDeviceID(), MotorAlignmentValue.Opposed));
+   
   }
-  /*
   /**
-   * 
-   *
+   * Our command to shoot using velocity voltage by telling it to speed up both the constant shooters in one
+   * and also the regular shooter with all going to the same RPS
    */
-  public void shootOutWithVelocity(){
-    speedUpVelocity(constantShooter2, targetFlywheelRPS); //.alongWith(speedUpVelocity(constantShooter2, targetFlywheelRPS).until(()-> constantShooter2.getVelocity().getValueAsDouble() >= targetFlywheelRPS)
-    speedUpVelocity(shooter, targetFlywheelRPS);//.until(()-> shooter.getVelocity().getValueAsDouble() >= targetFlywheelRPS);
+  public Command shootOutWithVelocity(){
+    targetFlywheelRPS = -10;
+      return new SequentialCommandGroup(speedUpVelocity(constantShooter2, targetFlywheelRPS).alongWith(speedUpVelocity(constantShooter, targetFlywheelRPS))
+      .alongWith(speedUpVelocity(shooter, targetFlywheelRPS)));
+      
+      
+    
+    
+
     
     
   }
   /**
-   * slows down both of them by 2 rps until they are less then 10 which then i will call the stopvelocity on th non constant one
+   * Slows down both of the constant shooters to 5 rps and shooter regular to 5 rps aswll then once all are less then 10 it stops the shooter motor
    */
   public void stopShootingWithVelocity(){
     slowDownVelocity(constantShooter, 5)
     .until(()-> constantShooter.getVelocity().getValueAsDouble() <= 10);
-    slowDownVelocity(constantShooter, 10)
+    slowDownVelocity(shooter, 5)
     .until(()->shooter.getVelocity().getValueAsDouble() <= 10);
     slowDownVelocity(constantShooter2, 5)
       .until(()-> constantShooter2.getVelocity().getValueAsDouble() <=10);
@@ -80,9 +84,8 @@ public class Shooter extends SubsystemBase {
    * 
    */
   private Command speedUpVelocity(TalonFX mTalonFX, double goalAmount){
-    return runOnce(()->
-     mTalonFX.setControl(new VelocityVoltage(goalAmount)));//.until(()->mTalonFX.getVelocity().getValueAsDouble() >= goalAmount);
-     //).until(()->mTalonFX.getVelocity().getValueAsDouble() >= goalAmount);
+    return new InstantCommand(()->
+     mTalonFX.setControl(mRequest.withVelocity(goalAmount))).until(()->mTalonFX.getVelocity().getValueAsDouble() >= goalAmount);
   }
   
   

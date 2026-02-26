@@ -9,11 +9,16 @@ import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 
+import edu.wpi.first.wpilibj.DigitalSource;
 //encoder
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
+import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.PivotMotor;
@@ -46,10 +51,13 @@ public class Intake extends SubsystemBase {
    * our command to go to our down position using a set control until were at our
    * down positon
    */
-  public Command goToDownPositionCommand() {
-    return new InstantCommand(() -> moveToFloorTalonFX
-        .setControl(new MotionMagicExpoVoltage(moveToFloorTalonFX.getPosition().getValueAsDouble() + 0.1)))
-        .until(() -> atDownPosition());
+  public void goToDownPositionCommand() {
+      while(atDownPosition() == false){
+        
+      
+       moveToFloorTalonFX.setControl(new MotionMagicExpoVoltage(moveToFloorTalonFX.getPosition().getValueAsDouble() + 0.5));
+      }
+   
   }
 
   /*
@@ -57,10 +65,10 @@ public class Intake extends SubsystemBase {
    * starting pose and saying to do it
    * until startingpose returns true
    */
-  public Command gotoStartPositonCommand() {
-    return new InstantCommand(() -> moveToFloorTalonFX
-          .setControl(new PositionVoltage(moveToFloorTalonFX.getPosition().getValueAsDouble() - 0.1)))
-    .until(() -> atStartingPosition());
+  public void gotoStartPositonCommand() {
+    while (atStartingPosition() == false) {
+      moveToFloorTalonFX.setControl(new MotionMagicExpoVoltage(moveToFloorTalonFX.getPosition().getValueAsDouble() - 0.5));
+    }
   }
 
   /*
@@ -94,10 +102,12 @@ public class Intake extends SubsystemBase {
    * encoder constant by 0.03
    */
   private boolean atStartingPosition() {
-    if (!(absoluteEncoder.get() < encoderConstant - 0.03) || !(absoluteEncoder.get() > encoderConstant + 0.03)) {
+    if(absoluteEncoder.get() < 0.9){
       return false;
-    } else {
+    }else if(absoluteEncoder.get() > 0.95 || absoluteEncoder.get() < 0.03){
       return true;
+    }else{
+      return false;
     }
   }
 
@@ -108,11 +118,13 @@ public class Intake extends SubsystemBase {
    * - 0.02 it will return true otherwise it will return false
    */
   private boolean atDownPosition() {
-    if (absoluteEncoder.get() >= encoderDownPos - 0.02) {
-      return true;
-    } else if (absoluteEncoder.get() <= encoderDownPos - 0.02) {
+    if(absoluteEncoder.get() > 0.9){
       return false;
-    } else {
+    }else if(absoluteEncoder.get() > encoderDownPos){
+      return false;
+    }else if(absoluteEncoder.get() <= encoderDownPos + 0.005 && absoluteEncoder.get() >= encoderDownPos - 0.005 ){
+      return true;
+    }else{
       return false;
     }
   }

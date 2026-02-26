@@ -46,25 +46,27 @@ public final class Constants {
       new Rotation3d(0, 180, 270));
   }
   public class talonIntakeCon {
-    public static double ENCODER_DOWN_POSITION = 0.93;
-    public static double ENCODER_STARTING_POSITION = 0.62;
+    public static double ENCODER_DOWN_POSITION = 0.31;
+    public static double ENCODER_STARTING_POSITION = 0.93;
     public static int INTAKE_MOTOR_ID = 8;
     public static final TalonFXConfiguration SPIN_MOTOR_CONFIG = new TalonFXConfiguration();
     public static int SPIN_MOTOR_ID = 9;
     public static final TalonFXConfiguration INTAKE_MOTOR_CONFIG = new TalonFXConfiguration();
     static {
       // in case forget intake motor up and down is kP of 6 kD of 0.005
-      INTAKE_MOTOR_CONFIG.Slot0.kP = 6;
+      INTAKE_MOTOR_CONFIG.Slot0.kP = 2;
       INTAKE_MOTOR_CONFIG.Slot0.kI = 0;
-      INTAKE_MOTOR_CONFIG.Slot0.kD = 0.005;
+      INTAKE_MOTOR_CONFIG.Slot0.kD = 0.03;
 
     }
 
   }
   public class shooterMotorCon{
     public static final TalonFXConfiguration CONSTANT_MOTOR_CONFIG = new TalonFXConfiguration();
+    public static final TalonFXConfiguration CONSTANT_MOTOR2_CONFIG = new TalonFXConfiguration();
     static{
-      CONSTANT_MOTOR_CONFIG.Slot0.kP = 1;
+      CONSTANT_MOTOR_CONFIG.Slot0.kP = 0.4;
+      CONSTANT_MOTOR2_CONFIG.Slot0.kP = 0.4;
     }
   }
 }

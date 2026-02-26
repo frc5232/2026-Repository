@@ -20,7 +20,7 @@ public class SpinMotor {
      * A default constructor to create a new spin motor with an id of 0
      */
     public SpinMotor(){
-        this(new TalonFX(0));
+        this(new TalonFX(99));
     }
     /**
      * 

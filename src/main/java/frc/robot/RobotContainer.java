@@ -115,8 +115,10 @@ public class RobotContainer {
         // 
         //joystick.pov(0).whileTrue(shooterSubsysem.shootOutWithVelocity()).whileFalse(shooterSubsysem.stopShootingWithVelocity());
        // joystick.pov(180).onTrue(shooterSubsysem.fishVelocity()).onFalse(shooterSubsysem.fishVelocityOff());
-        joystick.pov(180).onTrue(new InstantCommand(()->shooterSubsysem.shootOutWithVelocity()));
+        joystick.pov(180).onTrue(shooterSubsysem.shootOutWithVelocity());
         joystick.pov(0).onTrue(new InstantCommand(()->shooterSubsysem.stopShootingWithVelocity()));
+       // joystick.pov(90).onTrue(new InstantCommand(()->intakeSubsystem.goToDownPositionCommand()));
+        //joystick.pov(270).onTrue(new InstantCommand(()->intakeSubsystem.gotoStartPositonCommand()));
     }
 
     public Command getAutonomousCommand() {

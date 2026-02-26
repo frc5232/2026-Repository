@@ -22,7 +22,7 @@ public class PivotMotor {
      * Default constructor that assigns id of zero to the talonFx
      */
     public PivotMotor(){
-        this(new TalonFX(0));
+        this(new TalonFX(99));
     }
     /**
      * 
