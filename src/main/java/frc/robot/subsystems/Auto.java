@@ -40,8 +40,8 @@ public class Auto extends SubsystemBase {
   private TrajectoryConfig trajectoryConfig;
   private LTVUnicycleController ltvController;
   private ChassisSpeeds chassisSpeeds;
-  private ArrayList<Double> xValueForWayPoints = new ArrayList<Double>();
-  private ArrayList<Double> yValueForWayPoints = new ArrayList<Double>();
+  private double[] xValueForWayPoints;
+  private double[] yValueForWayPoints;
 
   private double[] rotationValues;
   private boolean firstStage = true;
@@ -95,7 +95,7 @@ public class Auto extends SubsystemBase {
     //     : List.of(new Translation2d(xValueForWayPoints.get(0), yValueForWayPoints.get(0)));
 
     trajectory = TrajectoryGenerator.generateTrajectory(c,
-        List.of(new Translation2d(xValueForWayPoints.get(0), xValueForWayPoints.get(0))), g, trajectoryConfig);
+        List.of(new Translation2d(0,0)), g, trajectoryConfig);
 
     return trajectory;
   }
@@ -178,23 +178,23 @@ public class Auto extends SubsystemBase {
       }
     } else {
       if (y < 3) {
-        // Left blue auto
-        goalPose2d = new Pose2d(7.724, 6.457, new Rotation2d(-90));
+        // // Left blue auto
+        // goalPose2d = new Pose2d(7.724, 6.457, new Rotation2d(-90));
 
-        while (firstStage == true) {
-          firstStage = followAuto(mGenSpeeds(trejGen(currentPose2d, goalPose2d), ltvController));
-        }
-        ;
-        xValueForWayPoints.set(0, 7.724);
-        xValueForWayPoints.set(1, 7.724);
+        // while (firstStage == true) {
+        //   firstStage = followAuto(mGenSpeeds(trejGen(currentPose2d, goalPose2d), ltvController));
+        // }
+        // ;
+        // xValueForWayPoints.set(0, 7.724);
+        // xValueForWayPoints.set(1, 7.724);
 
-        xValueForWayPoints.set(2, 7.724);
-        xValueForWayPoints.set(3, 5.704);
-        yValueForWayPoints.set(0, 6.457);
-        yValueForWayPoints.set(1, 5.663);
+        // xValueForWayPoints.set(2, 7.724);
+        // xValueForWayPoints.set(3, 5.704);
+        // yValueForWayPoints.set(0, 6.457);
+        // yValueForWayPoints.set(1, 5.663);
 
-        yValueForWayPoints.set(2, 3.953);
-        yValueForWayPoints.set(3, 5.158);
+        // yValueForWayPoints.set(2, 3.953);
+        // yValueForWayPoints.set(3, 5.158);
 
         goalPose2d = new Pose2d(2.921, 5.158, new Rotation2d(-90));
       } else if (y > 5) {
@@ -204,16 +204,16 @@ public class Auto extends SubsystemBase {
           firstStage = followAuto(mGenSpeeds(trejGen(currentPose2d, goalPose2d), ltvController));
         }
         ;
-        xValueForWayPoints.add(7.724);
-        xValueForWayPoints.add(7.724);
-        xValueForWayPoints.add(7.724);
-        xValueForWayPoints.add(7.724);
-        xValueForWayPoints.add(5.704);
-        yValueForWayPoints.add(6.457);
-        yValueForWayPoints.add(5.663);
-        yValueForWayPoints.add(4.715);
-        yValueForWayPoints.add(3.953);
-        yValueForWayPoints.add(5.158);
+        xValueForWayPoints[0] = 7.724;
+        xValueForWayPoints[1] = 7.724;
+        xValueForWayPoints[2] = 7.724;
+        xValueForWayPoints[3] = 7.724;
+        xValueForWayPoints[4] = 5.704;
+        yValueForWayPoints[0] = 6.457;
+        yValueForWayPoints[1] = 5.663;
+        yValueForWayPoints[2] = 4.715;
+        yValueForWayPoints[3] = 3.953;
+        yValueForWayPoints[4] = 5.158;
 
         goalPose2d = new Pose2d(2.921, 5.158, new Rotation2d(-90));
 
@@ -268,7 +268,7 @@ public class Auto extends SubsystemBase {
     if (DriverStation.getAlliance().get().toString() == "blue") {
       xForClimb = edu.wpi.first.math.util.Units.inchesToMeters(45);
       yForClimb = edu.wpi.first.math.util.Units.inchesToMeters(147);
-    } else if (DriverStation.getAlliance().get().toString() == "red") {
+    } else if (DriverStation.getAlliance().toString() == "red") {
       xForClimb = edu.wpi.first.math.util.Units.inchesToMeters(606);
       yForClimb = edu.wpi.first.math.util.Units.inchesToMeters(170);
     }
