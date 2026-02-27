@@ -67,5 +67,6 @@
   "editor.cursorStyle": "line",
   "editor.cursorWidth": 0,
   "editor.overtypeCursorStyle": "line",
-  "editor.overtypeOnPaste": false
+  "editor.overtypeOnPaste": false,
+  "java.debug.settings.onBuildFailureProceed": true
 }

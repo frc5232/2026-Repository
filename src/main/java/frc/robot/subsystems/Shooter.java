@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.Constants;
 
 public class Shooter extends SubsystemBase {
@@ -53,8 +54,8 @@ public class Shooter extends SubsystemBase {
    */
   public Command shootOutWithVelocity(){
     targetFlywheelRPS = -10;
-      return new SequentialCommandGroup(speedUpVelocity(constantShooter2, targetFlywheelRPS).alongWith(speedUpVelocity(constantShooter, targetFlywheelRPS))
-      .alongWith(speedUpVelocity(shooter, targetFlywheelRPS)));
+      return new SequentialCommandGroup(new InstantCommand(()->speedUpVelocity(constantShooter2, targetFlywheelRPS))).alongWith(new InstantCommand(()->speedUpVelocity(constantShooter, targetFlywheelRPS)));
+      //.alongWith(speedUpVelocity(shooter, targetFlywheelRPS)));
       
       
     
@@ -83,10 +84,9 @@ public class Shooter extends SubsystemBase {
    * @param goalAmount our goal amount
    * 
    */
-  private Command speedUpVelocity(TalonFX mTalonFX, double goalAmount){
-    return new InstantCommand(()->
-     mTalonFX.setControl(mRequest.withVelocity(goalAmount))).until(()->mTalonFX.getVelocity().getValueAsDouble() >= goalAmount);
-  }
+  private void speedUpVelocity(TalonFX mTalonFX, double goalAmount){
+    mTalonFX.setControl(mRequest.withVelocity(goalAmount));
+    }
   
   
   

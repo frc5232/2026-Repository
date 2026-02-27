@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.generated.TunerConstants;
 
 import frc.robot.subsystems.Aiming;
+import frc.robot.subsystems.Auto;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Intake;
@@ -42,7 +43,7 @@ public class RobotContainer {
     public final CommandSwerveDrivetrain drivetrainSubsystem = TunerConstants.createDrivetrain();
 
     // private final Vision visionSubsystem = new Vision(drivetrain);
-    // private final Auto autoSubsystem = new Auto(drivetrain,drive);
+     private final Auto autoSubsystem = new Auto(drivetrainSubsystem,drive);
     private final Aiming aimingSubsystem = new Aiming(drivetrainSubsystem, drive);
     private final Intake intakeSubsystem = new Intake();
     private final Climber climberSubsystem = new Climber();
@@ -122,8 +123,7 @@ public class RobotContainer {
     }
 
     public Command getAutonomousCommand() {
-        // return new InstantCommand(()->mAuto.PickAutoToRun());
-        return null;
+         return new InstantCommand(()->autoSubsystem.PickAutoToRun());
     }
 
 }
