@@ -5,58 +5,66 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
-import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 
-import edu.wpi.first.wpilibj.DigitalSource;
 //encoder
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
-import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
-import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
-import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.PivotMotor;
 
 public class Intake extends SubsystemBase {
   /** Creates a new Intake. */
   public DutyCycleEncoder absoluteEncoder;
-  
+  private MotionMagicExpoVoltage mRequest = new MotionMagicExpoVoltage(0);
   private TalonFX moveToFloorTalonFX;
   private TalonFX spinningMotor;
   private double encoderConstant;
   private double encoderDownPos;
- 
-
-  public Intake() {
+  private boolean tryToBeAtDownPose = false;
+  private boolean tryToBeAtStartPose = false;
+  private double encoderPosition;
+    public Intake() {
     moveToFloorTalonFX = new TalonFX(8);
     absoluteEncoder = new DutyCycleEncoder(0);
     
     moveToFloorTalonFX.getConfigurator().apply(Constants.talonIntakeCon.INTAKE_MOTOR_CONFIG);
 
     spinningMotor = new TalonFX(Constants.talonIntakeCon.SPIN_MOTOR_ID);
+    spinningMotor.getConfigurator().apply(Constants.talonIntakeCon.SPIN_MOTOR_CONFIG);
     // our upper position
     encoderConstant = Constants.talonIntakeCon.ENCODER_STARTING_POSITION;
     // our down positon
-    encoderDownPos = Constants.talonIntakeCon.ENCODER_DOWN_POSITION;
+    encoderDownPos  = 0.32;
 
   }
-
+  private void updateEncoderPose(){
+    encoderPosition = absoluteEncoder.get();
+  }
   /**
    * our command to go to our down position using a set control until were at our
    * down positon
    */
   public void goToDownPositionCommand() {
-      while(atDownPosition() == false){
-        
+       //tryToBeAtDownPose = true;
+       double x =absoluteEncoder.get();
+       if(!( x>= encoderDownPos && x < 0.8)){
+       while(atDownPosition() == false){
+        moveToFloorTalonFX.setControl(mRequest.withPosition(moveToFloorTalonFX.getPosition().getValueAsDouble() + 0.5));
+     }
+     }else{
+      while (atDownPosition() == false) {
+        moveToFloorTalonFX.setControl(mRequest.withPosition((moveToFloorTalonFX.getPosition().getValueAsDouble() - 0.5)));
+       }
       
-       moveToFloorTalonFX.setControl(new MotionMagicExpoVoltage(moveToFloorTalonFX.getPosition().getValueAsDouble() + 0.5));
-      }
+     }
+      spinningMotor.setControl(new VelocityVoltage(75.99));
+    tryToBeAtDownPose = true;
+    tryToBeAtStartPose = false;
    
   }
 
@@ -66,28 +74,11 @@ public class Intake extends SubsystemBase {
    * until startingpose returns true
    */
   public void gotoStartPositonCommand() {
-    while (atStartingPosition() == false) {
-      moveToFloorTalonFX.setControl(new MotionMagicExpoVoltage(moveToFloorTalonFX.getPosition().getValueAsDouble() - 0.5));
-    }
-  }
-
-  /*
-   * the background command for the movement for the goToStartPoseCommand so
-   * to explain more
-   * if our encoder position is less then our encoder constant which is our up
-   * position it moves downward by a tiny bit
-   * otherwise if our encoder position is greater then our encoder constant it
-   * moves down by a tiny bit
-   * use with a .until that way it doesnt keep bouncing back and forth
-   */
-  private void movementToStartingPosition() {
-    if (absoluteEncoder.get() < encoderConstant) {
-      moveToFloorTalonFX
-          .setControl(new MotionMagicExpoVoltage(moveToFloorTalonFX.getPosition().getValueAsDouble() + 0.1));
-    } else if (absoluteEncoder.get() > encoderConstant) {
-      
-    }
-
+     spinningMotor.setControl(new VelocityVoltage(0));
+     while(atStartingPosition() == false){
+    moveToFloorTalonFX.setControl(new MotionMagicExpoVoltage(moveToFloorTalonFX.getPosition().getValueAsDouble() - 0.5));}
+    
+  
   }
 
   /**
@@ -102,9 +93,8 @@ public class Intake extends SubsystemBase {
    * encoder constant by 0.03
    */
   private boolean atStartingPosition() {
-    if(absoluteEncoder.get() < 0.9){
-      return false;
-    }else if(absoluteEncoder.get() > 0.95 || absoluteEncoder.get() < 0.03){
+    double x = absoluteEncoder.get();
+    if(x > 0.95 || x < 0.03){
       return true;
     }else{
       return false;
@@ -118,34 +108,12 @@ public class Intake extends SubsystemBase {
    * - 0.02 it will return true otherwise it will return false
    */
   private boolean atDownPosition() {
-    if(absoluteEncoder.get() > 0.9){
-      return false;
-    }else if(absoluteEncoder.get() > encoderDownPos){
-      return false;
-    }else if(absoluteEncoder.get() <= encoderDownPos + 0.005 && absoluteEncoder.get() >= encoderDownPos - 0.005 ){
+    double x = absoluteEncoder.get();
+    if(x <= encoderDownPos + 0.01 && x >= encoderDownPos - 0.01 ){
       return true;
     }else{
       return false;
     }
-  }
-  /**
-   * 
-   * @param amountToGoTill the value we want it to spin until it hits this speed
-   * @param amountToIncreaseBy the amount it should increase by every time its calld
-   */
-  public Command startSpinningMotor(double amountToGoTill, double amountToIncreaseBy){
-    return new InstantCommand(()-> spinningMotor.setControl(new VelocityVoltage(spinningMotor.getVelocity().getValueAsDouble() + amountToIncreaseBy)))
-    .until(()-> spinningMotor.getVelocity().getValueAsDouble() >= amountToGoTill);
-  }
-  /**
-   * 
-   * @param amountToGotill amount to slow down until its less then or equal to
-   * @param amountToDereaseBy the amount to decrease by every time its called
-   */
-  public Command slowDownSpinningMotor(double amountToGotill, double amountToDereaseBy){
-    return new InstantCommand(()-> spinningMotor.setControl(new VelocityVoltage(spinningMotor.getVelocity().getValueAsDouble() - amountToDereaseBy)))
-    .until(()-> spinningMotor.getVelocity().getValueAsDouble() <= amountToGotill).andThen(()->stopSpinMotor());
-    
   }
   /**
    * Only call when its already at a low velocity voltage or in emergency
@@ -155,7 +123,9 @@ public class Intake extends SubsystemBase {
   }
   @Override
   public void periodic() {
-    publishPosition();
+    // publishPosition();
     
+    
+    // updateEncoderPose();
   }
 }

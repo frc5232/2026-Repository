@@ -40,22 +40,22 @@ public class Auto extends SubsystemBase {
   private TrajectoryConfig trajectoryConfig;
   private LTVUnicycleController ltvController;
   private ChassisSpeeds chassisSpeeds;
-  private double[] xValueForWayPoints;
-  private double[] yValueForWayPoints;
+  static double[] xValueForWayPoints = new double[10];
+  static double[] yValueForWayPoints = new double[10];
 
   private double[] rotationValues;
   private boolean firstStage = true;
 
   public Auto(CommandSwerveDrivetrain drivetrain, SwerveRequest.FieldCentric mCentric) {
-    drivetrainAuto = drivetrain;
-    drive = mCentric;
+    this.drivetrainAuto = drivetrain;
+    this.drive = mCentric;
     currentPose2d = drivetrainAuto.getState().Pose;
 
-    trajectory = new Trajectory();
+    
     // we can tune this some more when we are at arc field
     // this is for path of the auto from start to where we want to be
     ltvController = new LTVUnicycleController(VecBuilder.fill(0.0625, 0.125, 2.0), VecBuilder.fill(1.0, 2.0), 0.02, 9);
-    PickAutoToRun();
+    
   }
 
   /**
@@ -71,31 +71,15 @@ public class Auto extends SubsystemBase {
    * @param g - is our goal pose
    */
   private Trajectory trejGen(Pose2d c, Pose2d g) {
-    trajectoryConfig = new TrajectoryConfig(5, 2);
+    trajectoryConfig = new TrajectoryConfig(9, 5);
     /**
      * might end up having the list of get passed in but for now we are just having
      * the point to go through be the starting point
      */
 
-    // for(int i =0; i < xValueForWayPoints.size();i++){
-    // mList.add(i, new
-    // Translation2d(xValueForWayPoints.get(i),yValueForWayPoints.get(i)));
-    // }
-
-    // if (xValueForWayPoints.size() == 0) {
-    //   xValueForWayPoints.add(0, goalPose2d.getX());
-    //   yValueForWayPoints.add(0, goalPose2d.getY());
-
-    // }
-    
-    // List<Translation2d> mList = xValueForWayPoints.size() >= 3
-    //     ? List.of(new Translation2d(xValueForWayPoints.get(0), xValueForWayPoints.get(0)))
-    //         // new Translation2d(xValueForWayPoints.get(1), yValueForWayPoints.get(1)),
-    //         // new Translation2d(xValueForWayPoints.get(2), yValueForWayPoints.get(2)))
-    //     : List.of(new Translation2d(xValueForWayPoints.get(0), yValueForWayPoints.get(0)));
-
+   
     trajectory = TrajectoryGenerator.generateTrajectory(c,
-        List.of(new Translation2d(0,0)), g, trajectoryConfig);
+        List.of(new Translation2d(1,1)), g, trajectoryConfig);
 
     return trajectory;
   }
@@ -109,10 +93,11 @@ public class Auto extends SubsystemBase {
    */
   private ChassisSpeeds mGenSpeeds(Trajectory tj, LTVUnicycleController cont) {
     if (firstRunOfTraj) {
-      chassisSpeeds = cont.calculate(currentPose2d, tj.sample(tj.getTotalTimeSeconds()));
+      chassisSpeeds = cont.calculate(currentPose2d, goalPose2d, 5, 2);
       return chassisSpeeds;
     }
-    chassisSpeeds = cont.calculate(currentPose2d, tj.sample(0));
+
+    chassisSpeeds =  cont.calculate(currentPose2d, goalPose2d, 5, 2);
     firstRunOfTraj = true;
     return chassisSpeeds;
   }
@@ -130,6 +115,8 @@ public class Auto extends SubsystemBase {
      * close enough to goal pose it just skips over it using if statement
      * 
      */
+    
+    
     if (checking(currentPose2d, goalPose2d, 'x')) {
       mSpeeds.vxMetersPerSecond = 0;
     }
@@ -138,17 +125,21 @@ public class Auto extends SubsystemBase {
     }
     if (checking(currentPose2d, goalPose2d, 'r')) {
       mSpeeds.omegaRadiansPerSecond = 0;
+
     }
     if (mSpeeds.omegaRadiansPerSecond == 0 && mSpeeds.vxMetersPerSecond == 0 && mSpeeds.vyMetersPerSecond == 0) {
+      
       return false;
     }
-    new SequentialCommandGroup(new InstantCommand(
-        () -> drivetrainAuto.applyRequest(() -> drive.withVelocityX(mSpeeds.vxMetersPerSecond)))
-        .alongWith(
-            new InstantCommand(() -> drivetrainAuto.applyRequest(() -> drive.withVelocityY(mSpeeds.vyMetersPerSecond)))
-                .alongWith(new InstantCommand(
-                    () -> drivetrainAuto
-                        .applyRequest(() -> drive.withRotationalRate(mSpeeds.omegaRadiansPerSecond))))));
+     new SequentialCommandGroup(new InstantCommand(
+         () -> drivetrainAuto.applyRequest(() -> drive.withVelocityX(mSpeeds.vxMetersPerSecond)))
+         .alongWith(
+             new InstantCommand(() -> drivetrainAuto.applyRequest(() -> drive.withVelocityY(mSpeeds.vyMetersPerSecond)))
+                 .alongWith(new InstantCommand(
+                     () -> drivetrainAuto
+                         .applyRequest(() -> drive.withRotationalRate(mSpeeds.omegaRadiansPerSecond))))).until(()->currentPose2d.getX() == goalPose2d.getX()));
+  
+         
     return true;
 
   }
@@ -165,7 +156,7 @@ public class Auto extends SubsystemBase {
    *         trajectory gen and following
    */
 
-  public Pose2d PickAutoToRun() {
+  public InstantCommand PickAutoToRun() {
     double x = currentPose2d.getX();
     double y = currentPose2d.getY();
     if (x > 7) {
@@ -179,22 +170,22 @@ public class Auto extends SubsystemBase {
     } else {
       if (y < 3) {
         // // Left blue auto
-        // goalPose2d = new Pose2d(7.724, 6.457, new Rotation2d(-90));
-
-        // while (firstStage == true) {
-        //   firstStage = followAuto(mGenSpeeds(trejGen(currentPose2d, goalPose2d), ltvController));
-        // }
-        // ;
-        // xValueForWayPoints.set(0, 7.724);
-        // xValueForWayPoints.set(1, 7.724);
-
-        // xValueForWayPoints.set(2, 7.724);
-        // xValueForWayPoints.set(3, 5.704);
-        // yValueForWayPoints.set(0, 6.457);
-        // yValueForWayPoints.set(1, 5.663);
-
-        // yValueForWayPoints.set(2, 3.953);
-        // yValueForWayPoints.set(3, 5.158);
+        //goalPose2d = new Pose2d(7.724, 6.457, new Rotation2d(-90));
+        goalPose2d = new Pose2d(20,20,new Rotation2d(0));
+         while (firstStage == true) {
+           firstStage = followAuto(mGenSpeeds(trejGen(currentPose2d, goalPose2d), ltvController));
+         }
+          xValueForWayPoints[0] = 7.724;
+        xValueForWayPoints[1] = 7.724;
+        xValueForWayPoints[2] = 7.724;
+        xValueForWayPoints[3] = 7.724;
+        xValueForWayPoints[4] = 5.704;
+        yValueForWayPoints[0] = 6.457;
+        yValueForWayPoints[1] = 5.663;
+        yValueForWayPoints[2] = 4.715;
+        yValueForWayPoints[3] = 3.953;
+        yValueForWayPoints[4] = 5.158;
+        
 
         goalPose2d = new Pose2d(2.921, 5.158, new Rotation2d(-90));
       } else if (y > 5) {
@@ -222,8 +213,8 @@ public class Auto extends SubsystemBase {
       }
     }
     autoHasBeenPicked = true;
-    trejGen(currentPose2d, goalPose2d);
-    return goalPose2d;
+    
+    return new InstantCommand(()->followAuto(mGenSpeeds(trejGen(currentPose2d,goalPose2d), ltvController)));
   }
 
   /**
@@ -235,8 +226,10 @@ public class Auto extends SubsystemBase {
    * @return returns a bool which decides whether or whether not to stop
    */
   private Boolean checking(Pose2d c, Pose2d g, char typeToCheck) {
+    
     if (typeToCheck == 'x') {
       if (c.getX() > g.getX() - 0.25) {
+        
         return true;
       }
     } else if (typeToCheck == 'y') {
@@ -278,41 +271,12 @@ public class Auto extends SubsystemBase {
             .until(() -> drivetrainAuto.getState().Pose.getMeasureY().isNear(Units.Meters.of(yForClimb), 0.01))));
   }
 
-  /**
-   * Checking our goal pose so that way it wont keep trying to drive towards a
-   * goal if its close enough to it
-   * mainly for handling and making it easier to use
-   * I dont even think its needed but just in case
-   */
-  private void goalPoseChecking() {
-    Pose2d m = drivetrainAuto.getState().Pose;
-    double x = m.getX();
-    double y = m.getY();
-
-    double dx = goalPose2d.getX();
-    double dy = goalPose2d.getY();
-    Rotation2d dR = goalPose2d.getRotation();
-    if (m.getMeasureX().isNear(goalPose2d.getMeasureX(), 0.03)) {
-
-      goalPose2d = new Pose2d(x, dy, dR);
-      dx = goalPose2d.getX();
-      dy = goalPose2d.getY();
-      dR = goalPose2d.getRotation();
-    } else if (m.getMeasureY().isNear(goalPose2d.getMeasureY(), 0.03)) {
-      goalPose2d = new Pose2d(dx, y, dR);
-      dx = goalPose2d.getX();
-      dy = goalPose2d.getY();
-      dR = goalPose2d.getRotation();
-    }
-  }
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
     updatePose();
-    if (DriverStation.isAutonomous() && autoHasBeenPicked == true) {
-      followAuto(mGenSpeeds(trajectory, ltvController));
-    }
+    SmartDashboard.putNumber("x", drivetrainAuto.getState().Pose.getX());
 
   }
 }

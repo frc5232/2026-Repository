@@ -53,10 +53,12 @@ public class Shooter extends SubsystemBase {
    * and also the regular shooter with all going to the same RPS
    */
   public Command shootOutWithVelocity(){
-    targetFlywheelRPS = -10;
-      return new SequentialCommandGroup(new InstantCommand(()->speedUpVelocity(constantShooter2, targetFlywheelRPS))).alongWith(new InstantCommand(()->speedUpVelocity(constantShooter, targetFlywheelRPS)));
-      //.alongWith(speedUpVelocity(shooter, targetFlywheelRPS)));
-      
+    targetFlywheelRPS = 90;
+      // return new SequentialCommandGroup (new InstantCommand(()->speedUpVelocity(constantShooter2, targetFlywheelRPS))
+      // .alongWith(new InstantCommand(()->speedUpVelocity(constantShooter, targetFlywheelRPS))
+      // .alongWith(speedUpVelocity(shooter, targetFlywheelRPS))));
+      return new SequentialCommandGroup(new InstantCommand(()-> speedUpVelocity(constantShooter, targetFlywheelRPS))
+      .alongWith(new InstantCommand(()-> speedUpVelocity(constantShooter2, -targetFlywheelRPS)).alongWith(new InstantCommand(()->speedUpVelocity(shooter, -targetFlywheelRPS)))));
       
     
     
@@ -68,13 +70,12 @@ public class Shooter extends SubsystemBase {
    * Slows down both of the constant shooters to 5 rps and shooter regular to 5 rps aswll then once all are less then 10 it stops the shooter motor
    */
   public void stopShootingWithVelocity(){
-    slowDownVelocity(constantShooter, 5)
-    .until(()-> constantShooter.getVelocity().getValueAsDouble() <= 10);
-    slowDownVelocity(shooter, 5)
-    .until(()->shooter.getVelocity().getValueAsDouble() <= 10);
-    slowDownVelocity(constantShooter2, 5)
-      .until(()-> constantShooter2.getVelocity().getValueAsDouble() <=10);
-    stopSpinningMotorVelocity(shooter);
+    
+    slowDownVelocity(shooter, 20);
+    
+    
+    if(shooter.getVelocity().getValueAsDouble() <= 22) {
+    stopSpinningMotorVelocity(shooter);}
     
     }
 
@@ -95,9 +96,9 @@ public class Shooter extends SubsystemBase {
    * @param mTalonFX our talonfx to slow down
    * @param amountToDerease amount to decrase it by every time its called
    */
-  private Command slowDownVelocity(TalonFX mTalonFX, double goalAmount){
-    return runOnce(()->
-    mTalonFX.setControl(mRequest.withVelocity(goalAmount)));
+  private void slowDownVelocity(TalonFX mTalonFX, double goalAmount){
+    
+    mTalonFX.setControl(mRequest.withVelocity(goalAmount));
     //).until(()-> mTalonFX.getVelocity().getValueAsDouble() <= goalAmount);
   }
   /**
@@ -143,7 +144,7 @@ public class Shooter extends SubsystemBase {
    * only call when its already slowed down significantly or in emeergency situtations
    */
   private void stopSpinningMotorVelocity(TalonFX mFx){
-   // mFx.setControl(mRequest.withVelocity(0));
+   mFx.setControl(mRequest.withVelocity(0));
   }
   @Override
   public void periodic() {

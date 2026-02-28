@@ -16,13 +16,10 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.generated.TunerConstants;
 
-import frc.robot.subsystems.Aiming;
-import frc.robot.subsystems.Auto;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Shooter;
-
 public class RobotContainer {
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
                                                                                         // speed
@@ -43,11 +40,12 @@ public class RobotContainer {
     public final CommandSwerveDrivetrain drivetrainSubsystem = TunerConstants.createDrivetrain();
 
     // private final Vision visionSubsystem = new Vision(drivetrain);
-     private final Auto autoSubsystem = new Auto(drivetrainSubsystem,drive);
-    private final Aiming aimingSubsystem = new Aiming(drivetrainSubsystem, drive);
+    // private final Auto autoSubsystem = new Auto(drivetrainSubsystem,drive);
+   // private final Aiming aimingSubsystem = new Aiming(drivetrainSubsystem, drive);
     private final Intake intakeSubsystem = new Intake();
     private final Climber climberSubsystem = new Climber();
     private final Shooter shooterSubsysem = new Shooter();
+   // private final AutoWithPathPlanner autoWithPathPlannerSubsystem = new AutoWithPathPlanner();
     // private final Constants mConstants = new Constants();
     public RobotContainer() {
         configureBindings();
@@ -66,7 +64,7 @@ public class RobotContainer {
                                                                                                     // (forward)
                         .withVelocityY(-joystick.getLeftX() * MaxSpeed)//yAxisRateLimiter.calculate(-joystick.getLeftX()) * MaxSpeed) // Drive left with
                                                                                                     // negative X (left)
-                        .withRotationalRate(-joystick.getRightX() * MaxAngularRate)//rotationRateLimiter.calculate(-joystick.getRightX()) * MaxAngularRate) // Drive
+                        .withRotationalRate(joystick.getRightX() * MaxAngularRate)//rotationRateLimiter.calculate(-joystick.getRightX()) * MaxAngularRate) // Drive
                                                                                                                   // counterclockwise
                                                                                                                   // with
                                                                                                                   // NOT
@@ -95,7 +93,7 @@ public class RobotContainer {
 
         // Reset the field-centric heading on left bumper press.
         joystick.leftBumper()
-                .onTrue(drivetrainSubsystem.runOnce(() -> drivetrainSubsystem.seedFieldCentric(new Rotation2d(180))));
+                .onTrue(drivetrainSubsystem.runOnce(() -> drivetrainSubsystem.resetRotation(new Rotation2d(0))));
 
         // joystick.pov(0).toggleOnTrue(new
         // InstantCommand(()->mIntake.intakeBalls())).toggleOnFalse(new
@@ -118,12 +116,13 @@ public class RobotContainer {
        // joystick.pov(180).onTrue(shooterSubsysem.fishVelocity()).onFalse(shooterSubsysem.fishVelocityOff());
         joystick.pov(180).onTrue(shooterSubsysem.shootOutWithVelocity());
         joystick.pov(0).onTrue(new InstantCommand(()->shooterSubsysem.stopShootingWithVelocity()));
-       // joystick.pov(90).onTrue(new InstantCommand(()->intakeSubsystem.goToDownPositionCommand()));
-        //joystick.pov(270).onTrue(new InstantCommand(()->intakeSubsystem.gotoStartPositonCommand()));
+        joystick.pov(90).onTrue(new InstantCommand(()->intakeSubsystem.goToDownPositionCommand()));
+        joystick.pov(270).onTrue(new InstantCommand(()->intakeSubsystem.gotoStartPositonCommand()));
     }
 
     public Command getAutonomousCommand() {
-         return new InstantCommand(()->autoSubsystem.PickAutoToRun());
+       // return autoWithPathPlannerSubsystem.getAuto();
+       return null;
     }
 
 }
