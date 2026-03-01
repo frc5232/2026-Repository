@@ -5,6 +5,7 @@
 package frc.robot;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.pathplanner.lib.config.RobotConfig;
 
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -46,7 +47,7 @@ public final class Constants {
       new Rotation3d(0, 180, 270));
   }
   public class talonIntakeCon {
-    public static double ENCODER_DOWN_POSITION = 0.28;
+    public static double ENCODER_DOWN_POSITION = 0.32;
     public static double ENCODER_STARTING_POSITION = 0.93;
     public static int INTAKE_MOTOR_ID = 8;
     public static final TalonFXConfiguration SPIN_MOTOR_CONFIG = new TalonFXConfiguration();
@@ -69,4 +70,6 @@ public final class Constants {
       CONSTANT_MOTOR2_CONFIG.Slot0.kP = 0.4;
     }
   }
+  
+  
 }

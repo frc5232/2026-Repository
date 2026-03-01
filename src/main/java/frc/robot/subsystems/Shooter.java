@@ -4,23 +4,14 @@
 
 package frc.robot.subsystems;
 
-import org.opencv.objdetect.RefineParameters;
-
-import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.controls.DutyCycleOut;
-import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.controls.StrictFollower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.MotorAlignmentValue;
-
-import edu.wpi.first.wpilibj.motorcontrol.Talon;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.Constants;
 
 public class Shooter extends SubsystemBase {
@@ -28,9 +19,11 @@ public class Shooter extends SubsystemBase {
   private TalonFX constantShooter;
   private TalonFX shooter;
   private TalonFX constantShooter2;
-  private double targetFlywheelRPS;
+  private double targetFlywheelRPS = 90;
   private VelocityVoltage mRequest = new VelocityVoltage(0);
+  private boolean startUp;
   public Shooter() {
+    targetFlywheelRPS = 90;
     /**
      * Look into making it into a .withvelovity instead of voltage come testing time
      */
@@ -149,5 +142,10 @@ public class Shooter extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+    if(DriverStation.isTeleopEnabled() == true && startUp == false){
+      startUp = true;
+      speedUpVelocity(constantShooter, targetFlywheelRPS);
+      speedUpVelocity(constantShooter2, -targetFlywheelRPS);
+    }
   }
 }

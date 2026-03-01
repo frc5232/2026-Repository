@@ -15,7 +15,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.generated.TunerConstants;
-
+import frc.robot.subsystems.AutoWithPathPlanner;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Intake;
@@ -45,7 +45,7 @@ public class RobotContainer {
     private final Intake intakeSubsystem = new Intake();
     private final Climber climberSubsystem = new Climber();
     private final Shooter shooterSubsysem = new Shooter();
-   // private final AutoWithPathPlanner autoWithPathPlannerSubsystem = new AutoWithPathPlanner();
+        private final AutoWithPathPlanner autoWithPathPlannerSubsystem = new AutoWithPathPlanner();
     // private final Constants mConstants = new Constants();
     public RobotContainer() {
         configureBindings();
@@ -118,11 +118,13 @@ public class RobotContainer {
         joystick.pov(0).onTrue(new InstantCommand(()->shooterSubsysem.stopShootingWithVelocity()));
         joystick.pov(90).onTrue(new InstantCommand(()->intakeSubsystem.goToDownPositionCommand()));
         joystick.pov(270).onTrue(new InstantCommand(()->intakeSubsystem.gotoStartPositonCommand()));
+        joystick.x().whileTrue(new InstantCommand(()-> intakeSubsystem.moveUpwards()));
+        joystick.y().whileTrue(new InstantCommand(()-> intakeSubsystem.moveDownwards()));
     }
 
     public Command getAutonomousCommand() {
        // return autoWithPathPlannerSubsystem.getAuto();
-       return null;
+       return autoWithPathPlannerSubsystem.getAuto();
     }
 
 }

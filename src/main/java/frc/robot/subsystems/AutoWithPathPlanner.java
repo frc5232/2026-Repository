@@ -14,11 +14,11 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class AutoWithPathPlanner extends SubsystemBase {
   /** Creates a new AutoWithPathPlanner. */
-  PathPlannerAuto mAuto = new PathPlannerAuto("Left blue auto v1");
+  PathPlannerAuto mAuto;
   AutoBuilder mAutoBuilder = new AutoBuilder();
 
   public AutoWithPathPlanner() {
-    AutoBuilder.buildAuto("left blue auto v1");
+    mAuto.activePath("Left blue auto v1");
     
   }
   public Command getAuto(){

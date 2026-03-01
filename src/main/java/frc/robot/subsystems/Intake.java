@@ -8,12 +8,15 @@ import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 
+import edu.wpi.first.wpilibj.DriverStation;
 //encoder
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -50,24 +53,31 @@ public class Intake extends SubsystemBase {
    * down positon
    */
   public void goToDownPositionCommand() {
-       //tryToBeAtDownPose = true;
+       tryToBeAtDownPose = true;
+      tryToBeAtStartPose = false;
        double x =absoluteEncoder.get();
+       spinningMotor.setControl(new VelocityVoltage(30.99));
        if(!( x>= encoderDownPos && x < 0.8)){
-       while(atDownPosition() == false){
-        moveToFloorTalonFX.setControl(mRequest.withPosition(moveToFloorTalonFX.getPosition().getValueAsDouble() + 0.5));
-     }
-     }else{
+        while(atDownPosition() == false){
+      moveToFloorTalonFX.setControl(mRequest.withPosition((moveToFloorTalonFX.getPosition().getValueAsDouble() + 0.5)));
+    } }else{
       while (atDownPosition() == false) {
-        moveToFloorTalonFX.setControl(mRequest.withPosition((moveToFloorTalonFX.getPosition().getValueAsDouble() - 0.5)));
-       }
       
-     }
-      spinningMotor.setControl(new VelocityVoltage(75.99));
-    tryToBeAtDownPose = true;
-    tryToBeAtStartPose = false;
+       moveToFloorTalonFX.setControl(mRequest.withPosition((moveToFloorTalonFX.getPosition().getValueAsDouble() - 0.5)));
+    }}
+      
+     
+    
+    
    
   }
+  public void moveDownwards(){
+    moveToFloorTalonFX.setControl(mRequest.withPosition(moveToFloorTalonFX.getPosition().getValueAsDouble() +1));
 
+  }
+  public void moveUpwards(){
+    moveToFloorTalonFX.setControl(mRequest.withPosition(moveToFloorTalonFX.getPosition().getValueAsDouble()-1));
+  }
   /*
    * This is our command to go to our starting pose by chaining our movement to
    * starting pose and saying to do it
@@ -75,9 +85,9 @@ public class Intake extends SubsystemBase {
    */
   public void gotoStartPositonCommand() {
      spinningMotor.setControl(new VelocityVoltage(0));
-     while(atStartingPosition() == false){
-    moveToFloorTalonFX.setControl(new MotionMagicExpoVoltage(moveToFloorTalonFX.getPosition().getValueAsDouble() - 0.5));}
-    
+    while(atStartingPosition() == false){moveToFloorTalonFX.setControl(new MotionMagicExpoVoltage(moveToFloorTalonFX.getPosition().getValueAsDouble() - 0.5));}
+      tryToBeAtStartPose = true;
+      tryToBeAtDownPose = false;
   
   }
 
@@ -115,17 +125,29 @@ public class Intake extends SubsystemBase {
       return false;
     }
   }
-  /**
-   * Only call when its already at a low velocity voltage or in emergency
-   */
-  private void stopSpinMotor(){
-    spinningMotor.setControl(new VelocityVoltage(0));
-  }
+  
   @Override
   public void periodic() {
-    // publishPosition();
+   
+    if(tryToBeAtDownPose == true){
+      if(atDownPosition() == false){
+        if(absoluteEncoder.get() >= encoderDownPos){
+          moveToFloorTalonFX.setControl(mRequest.withPosition(moveToFloorTalonFX.getPosition().getValueAsDouble() -0.5));
+        }else{
+          moveToFloorTalonFX.setControl(mRequest.withPosition(moveToFloorTalonFX.getPosition().getValueAsDouble() + 0.5));
+        }
+      }
+    }
+    if(tryToBeAtStartPose == true){
+      if(atStartingPosition() == false){
+        if(absoluteEncoder.get() <= encoderConstant  && absoluteEncoder.get() < 0.05){
+          moveToFloorTalonFX.setControl(mRequest.withPosition(moveToFloorTalonFX.getPosition().getValueAsDouble() -0.5));
+        }else{
+          moveToFloorTalonFX.setControl(mRequest.withPosition(moveToFloorTalonFX.getPosition().getValueAsDouble() + 0.5));
+        }
+      }
+    }
     
-    
-    // updateEncoderPose();
   }
+  
 }
