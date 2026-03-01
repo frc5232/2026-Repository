@@ -53,6 +53,7 @@ public class Intake extends SubsystemBase {
    * down positon
    */
   public void goToDownPositionCommand() {
+    System.out.println("TEST BITCHES");
        tryToBeAtDownPose = true;
       tryToBeAtStartPose = false;
        double x =absoluteEncoder.get();
@@ -84,7 +85,7 @@ public class Intake extends SubsystemBase {
    * until startingpose returns true
    */
   public void gotoStartPositonCommand() {
-     spinningMotor.setControl(new VelocityVoltage(0));
+     spinningMotor.setControl(new VelocityVoltage(2));
     while(atStartingPosition() == false){moveToFloorTalonFX.setControl(new MotionMagicExpoVoltage(moveToFloorTalonFX.getPosition().getValueAsDouble() - 0.5));}
       tryToBeAtStartPose = true;
       tryToBeAtDownPose = false;

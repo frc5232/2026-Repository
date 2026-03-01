@@ -20,6 +20,7 @@ import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Shooter;
+import frc.robot.subsystems.StateMachine;
 public class RobotContainer {
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
                                                                                         // speed
@@ -45,8 +46,9 @@ public class RobotContainer {
     private final Intake intakeSubsystem = new Intake();
     private final Climber climberSubsystem = new Climber();
     private final Shooter shooterSubsysem = new Shooter();
-        private final AutoWithPathPlanner autoWithPathPlannerSubsystem = new AutoWithPathPlanner();
+        private final AutoWithPathPlanner autoWithPathPlannerSubsystem = new AutoWithPathPlanner(intakeSubsystem, shooterSubsysem);
     // private final Constants mConstants = new Constants();
+    private final StateMachine stateSubsystem = new StateMachine(intakeSubsystem,shooterSubsysem,drivetrainSubsystem,autoWithPathPlannerSubsystem);
     public RobotContainer() {
         configureBindings();
     }
@@ -123,8 +125,8 @@ public class RobotContainer {
     }
 
     public Command getAutonomousCommand() {
-       // return autoWithPathPlannerSubsystem.getAuto();
-       return autoWithPathPlannerSubsystem.getAuto();
+        return autoWithPathPlannerSubsystem.getAuto(1);
+      
     }
 
 }
