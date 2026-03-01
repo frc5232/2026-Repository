@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
@@ -148,12 +149,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             ()->getState().Pose, // Robot pose supplier
             this::resetPose, // Method to reset odometry (will be called if your auto has a starting pose)
             ()->getState().Speeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-            (speeds, feedforwards) -> applyRequest(()->drive.withVelocityX(speeds.vxMetersPerSecond)).alongWith(applyRequest(()->drive.withVelocityY(speeds.vyMetersPerSecond))).alongWith(applyRequest(()-> drive.withRotationalRate(speeds.omegaRadiansPerSecond))), // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also optionally outputs individual module feedforwards
+            (speeds, feedforwards) -> new SequentialCommandGroup(applyRequest(()->drive.withVelocityX(speeds.vxMetersPerSecond)),applyRequest(()->drive.withVelocityY(speeds.vyMetersPerSecond)),applyRequest(()-> drive.withRotationalRate(speeds.omegaRadiansPerSecond))), // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also optionally outputs individual module feedforwards
             new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
                     new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
                     new PIDConstants(5.0, 0.0, 0.0) // Rotation PID constants
             ),
-            CommandSwerveDrivetrain.config, // The robot configuration
+            config, // The robot configuration
             () -> {
               // Boolean supplier that controls when the path will be mirrored for the red alliance
               // This will flip the path being followed to the red side of the field.
