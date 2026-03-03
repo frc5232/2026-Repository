@@ -27,12 +27,13 @@ public class AutoWithPathPlanner extends SubsystemBase {
   public AutoWithPathPlanner(Intake mIntake,Shooter mShooter) {
      NamedCommands.registerCommand("IntakeDown", new InstantCommand(()->mIntake.goToDownPositionCommand()));
     NamedCommands.registerCommand("shoot", mShooter.shootOutWithVelocity());
-    this.autoPartOne = new PathPlannerAuto("left blue part 1");
+    this.autoPartOne = new PathPlannerAuto("left blue auto v1");
+    
   }
   public PathPlannerAuto getAuto(int part){
     switch (part) {
       case 1:
-        return this.autoPartOne;
+        return autoPartOne;
       case 2:
         return autoPartTwo;
       case 3:
