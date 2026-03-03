@@ -7,7 +7,6 @@ package frc.robot.subsystems;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -19,18 +18,18 @@ public class Shooter extends SubsystemBase {
   private TalonFX constantShooter;
   private TalonFX shooter;
   private TalonFX constantShooter2;
-  private double targetFlywheelRPS = 90;
+  private double targetFlywheelRPS = 40;
   private VelocityVoltage mRequest = new VelocityVoltage(0);
   private boolean startUp;
   public Shooter() {
-    targetFlywheelRPS = 90;
+    targetFlywheelRPS = 100;
     /**
      * Look into making it into a .withvelovity instead of voltage come testing time
      */
     /**
      * our bottom shooter
      */
-    shooter = new TalonFX(0);
+    shooter = new TalonFX(3);
     //the first shooter motor that we spin up constantly
     constantShooter = new TalonFX(6);
     // the second shooter motor that we spin up constantly
@@ -46,7 +45,7 @@ public class Shooter extends SubsystemBase {
    * and also the regular shooter with all going to the same RPS
    */
   public Command shootOutWithVelocity(){
-    targetFlywheelRPS = 90;
+    targetFlywheelRPS = 100;
       // return new SequentialCommandGroup (new InstantCommand(()->speedUpVelocity(constantShooter2, targetFlywheelRPS))
       // .alongWith(new InstantCommand(()->speedUpVelocity(constantShooter, targetFlywheelRPS))
       // .alongWith(speedUpVelocity(shooter, targetFlywheelRPS))));
@@ -139,13 +138,14 @@ public class Shooter extends SubsystemBase {
   private void stopSpinningMotorVelocity(TalonFX mFx){
    mFx.setControl(mRequest.withVelocity(0));
   }
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    if(DriverStation.isTeleopEnabled() == true && startUp == false){
-      startUp = true;
-      speedUpVelocity(constantShooter, targetFlywheelRPS);
-      speedUpVelocity(constantShooter2, -targetFlywheelRPS);
-    }
+    // if(DriverStation.isTeleopEnabled() == true && startUp == false){
+    //   startUp = true;
+    //   speedUpVelocity(constantShooter, targetFlywheelRPS);
+    //   speedUpVelocity(constantShooter2, -targetFlywheelRPS);
+    // }
   }
 }

@@ -7,16 +7,11 @@ package frc.robot.subsystems;
 import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
-
-import edu.wpi.first.wpilibj.DriverStation;
 //encoder
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.RepeatCommand;
-import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -43,7 +38,7 @@ public class Intake extends SubsystemBase {
     encoderConstant = Constants.talonIntakeCon.ENCODER_STARTING_POSITION;
     // our down positon
     encoderDownPos  = 0.32;
-
+      
   }
   private void updateEncoderPose(){
     encoderPosition = absoluteEncoder.get();
@@ -52,12 +47,12 @@ public class Intake extends SubsystemBase {
    * our command to go to our down position using a set control until were at our
    * down positon
    */
-  public void goToDownPositionCommand() {
-    System.out.println("TEST BITCHES");
+  public Command goToDownPositionCommand() {
+    
+    SmartDashboard.putNumber("testtt", 1);
        tryToBeAtDownPose = true;
       tryToBeAtStartPose = false;
        double x =absoluteEncoder.get();
-       spinningMotor.setControl(new VelocityVoltage(30.99));
        if(!( x>= encoderDownPos && x < 0.8)){
         while(atDownPosition() == false){
       moveToFloorTalonFX.setControl(mRequest.withPosition((moveToFloorTalonFX.getPosition().getValueAsDouble() + 0.5)));
@@ -66,6 +61,8 @@ public class Intake extends SubsystemBase {
       
        moveToFloorTalonFX.setControl(mRequest.withPosition((moveToFloorTalonFX.getPosition().getValueAsDouble() - 0.5)));
     }}
+       return new InstantCommand(()->spinningMotor.setControl(new VelocityVoltage(30.99)));
+       
       
      
     

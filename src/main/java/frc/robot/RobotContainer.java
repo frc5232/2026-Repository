@@ -7,20 +7,21 @@ package frc.robot;
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.pathplanner.lib.auto.NamedCommands;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.AutoWithPathPlanner;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Shooter;
-import frc.robot.subsystems.StateMachine;
 public class RobotContainer {
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
                                                                                         // speed
@@ -39,18 +40,28 @@ public class RobotContainer {
     private final CommandXboxController joystick = new CommandXboxController(0);
 
     public final CommandSwerveDrivetrain drivetrainSubsystem = TunerConstants.createDrivetrain();
-
+        
     // private final Vision visionSubsystem = new Vision(drivetrain);
     // private final Auto autoSubsystem = new Auto(drivetrainSubsystem,drive);
    // private final Aiming aimingSubsystem = new Aiming(drivetrainSubsystem, drive);
-    private final Intake intakeSubsystem = new Intake();
-    private final Climber climberSubsystem = new Climber();
-    private final Shooter shooterSubsysem = new Shooter();
-        private final AutoWithPathPlanner autoWithPathPlannerSubsystem = new AutoWithPathPlanner(intakeSubsystem, shooterSubsysem);
+    private final Intake intakeSubsystem;
+    private final Climber climberSubsystem;
+    private final Shooter shooterSubsysem;
+     //   private final AutoWithPathPlanner autoWithPathPlannerSubsystem = new AutoWithPathPlanner(intakeSubsystem, shooterSubsysem);
     // private final Constants mConstants = new Constants();
-    private final StateMachine stateSubsystem = new StateMachine(intakeSubsystem,shooterSubsysem,drivetrainSubsystem,autoWithPathPlannerSubsystem);
+   // private final StateMachine stateSubsystem = new StateMachine(intakeSubsystem,shooterSubsysem,drivetrainSubsystem);
+        
+        
     public RobotContainer() {
+       intakeSubsystem = new Intake();
+       climberSubsystem = new Climber();
+       shooterSubsysem = new Shooter();
+         NamedCommands.registerCommand("shoot", shooterSubsysem.shootOutWithVelocity());
+         SmartDashboard.putBoolean("testingpleasework", NamedCommands.hasCommand("shoot"));
+         NamedCommands.registerCommand("IntakeDown",intakeSubsystem.goToDownPositionCommand());
         configureBindings();
+        // SignalLogger.setPath("/media/sda1/");
+       //SignalLogger.start();
     }
 
     private void configureBindings() {
@@ -103,30 +114,27 @@ public class RobotContainer {
         // joystick.pov(0).onChange(mIntake.increasePositionBy1());
         // joystick.a().onChange(mIntake.increasePositionBy1());
         drivetrainSubsystem.registerTelemetry(logger::telemeterize);
-        // joystick.pov(0).onChange(new InstantCommand(()->mIntake.increasePosition()));
-        // joystick.x().onChange(new InstantCommand(()->mIntake.goalPos()));
+        
+        // joystick.pov(180).onTrue(shooterSubsysem.shootOutWithVelocity());
+        // joystick.pov(0).onTrue(new InstantCommand(()->shooterSubsysem.stopShootingWithVelocity()));
+        // joystick.pov(90).onTrue(new InstantCommand(()->intakeSubsystem.goToDownPositionCommand()));
+        // joystick.pov(270).onTrue(new InstantCommand(()->intakeSubsystem.gotoStartPositonCommand()));
 
+        joystick.pov(0).whileTrue(drivetrainSubsystem.sysIdDynamic(SysIdRoutine.Direction.kForward));
+        joystick.pov(90).whileTrue(drivetrainSubsystem.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+        joystick.pov(180).whileTrue(drivetrainSubsystem.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+        joystick.pov(270).whileTrue(drivetrainSubsystem.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
 
-        //  joystick.x().whileTrue(climberSubsystem.climbUp());
-        //  joystick.y().whileTrue(climberSubsystem.climbDown());
-        //  joystick.pov(0).whileTrue(climberSubsystem.climbUp());
-        //  joystick.pov(90).whileTrue(climberSubsystem.climbDown());
-
-
-        // 
-        //joystick.pov(0).whileTrue(shooterSubsysem.shootOutWithVelocity()).whileFalse(shooterSubsysem.stopShootingWithVelocity());
-       // joystick.pov(180).onTrue(shooterSubsysem.fishVelocity()).onFalse(shooterSubsysem.fishVelocityOff());
-        joystick.pov(180).onTrue(shooterSubsysem.shootOutWithVelocity());
-        joystick.pov(0).onTrue(new InstantCommand(()->shooterSubsysem.stopShootingWithVelocity()));
-        joystick.pov(90).onTrue(new InstantCommand(()->intakeSubsystem.goToDownPositionCommand()));
-        joystick.pov(270).onTrue(new InstantCommand(()->intakeSubsystem.gotoStartPositonCommand()));
         joystick.x().whileTrue(new InstantCommand(()-> intakeSubsystem.moveUpwards()));
         joystick.y().whileTrue(new InstantCommand(()-> intakeSubsystem.moveDownwards()));
+        
     }
 
     public Command getAutonomousCommand() {
-        return autoWithPathPlannerSubsystem.getAuto(1);
-      
+        return 
+        null;
+        
+        
     }
 
 }

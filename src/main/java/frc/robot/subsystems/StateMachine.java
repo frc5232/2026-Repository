@@ -16,16 +16,16 @@ public class StateMachine extends SubsystemBase {
   Shooter mShooter;
   CommandSwerveDrivetrain drivetrain;
   AutoWithPathPlanner mAutoWithPathPlanner;
-  public StateMachine(Intake intakeSubsystem, Shooter shooterSubsysem, CommandSwerveDrivetrain drivetrainSubsystem,AutoWithPathPlanner autoWithPathPlanner) {
+  public StateMachine(Intake intakeSubsystem, Shooter shooterSubsysem, CommandSwerveDrivetrain drivetrainSubsystem) {
     this.mIntake = intakeSubsystem;
     this.mShooter = shooterSubsysem;
     this.drivetrain = drivetrainSubsystem;
-    this.mAutoWithPathPlanner = autoWithPathPlanner;
+    
     
    
   }
-  public void getAuto(){
-    new SequentialCommandGroup(mAutoWithPathPlanner.getAuto(1),new InstantCommand(()->mIntake.goToDownPositionCommand()).andThen(mAutoWithPathPlanner.getAuto(2)));//.andThen(mAutoWithPathPlanner.getAuto(3));
+  public Command getAuto(){
+     return new SequentialCommandGroup(mAutoWithPathPlanner.getAuto(1),new InstantCommand(()->mIntake.goToDownPositionCommand()).andThen(mAutoWithPathPlanner.getAuto(2)));//.andThen(mAutoWithPathPlanner.getAuto(3));
   
   }
   @Override
