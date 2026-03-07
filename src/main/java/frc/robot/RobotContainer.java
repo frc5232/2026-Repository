@@ -7,10 +7,12 @@ package frc.robot;
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -41,7 +43,7 @@ public class RobotContainer {
     private final CommandXboxController joystick = new CommandXboxController(0);
 
     public final CommandSwerveDrivetrain drivetrainSubsystem = Comp1TunerConstatnts.createDrivetrain();
-        
+
     // private final Vision visionSubsystem = new Vision(drivetrain);
     // private final Auto autoSubsystem = new Auto(drivetrainSubsystem,drive);
    // private final Aiming aimingSubsystem = new Aiming(drivetrainSubsystem, drive);
@@ -51,8 +53,9 @@ public class RobotContainer {
      //   private final AutoWithPathPlanner autoWithPathPlannerSubsystem = new AutoWithPathPlanner(intakeSubsystem, shooterSubsysem);
     // private final Constants mConstants = new Constants();
    // private final StateMachine stateSubsystem = new StateMachine(intakeSubsystem,shooterSubsysem,drivetrainSubsystem);
-        
-        
+
+    private final SendableChooser<String> autoChooser = new SendableChooser<>();
+
     public RobotContainer() {
 //        intakeSubsystem = new Intake();
 //        climberSubsystem = new Climber();
@@ -61,6 +64,10 @@ public class RobotContainer {
         // SmartDashboard.putBoolean("testingpleasework", NamedCommands.hasCommand("shoot"));
         // NamedCommands.registerCommand("IntakeDown",intakeSubsystem.goToDownPositionCommand());
         configureBindings();
+
+        autoChooser.setDefaultOption("Left", "left");
+        autoChooser.addOption("Right", "right");
+        SmartDashboard.putData("Auto Chooser", autoChooser);
         // SignalLogger.setPath("/media/sda1/");
        //SignalLogger.start();
     }
@@ -115,7 +122,7 @@ public class RobotContainer {
         // joystick.pov(0).onChange(mIntake.increasePositionBy1());
         // joystick.a().onChange(mIntake.increasePositionBy1());
         drivetrainSubsystem.registerTelemetry(logger::telemeterize);
-        
+
          joystick.leftBumper().onTrue(shooterSubsysem.shootOutWithVelocity());
          joystick.pov(0).onTrue(new InstantCommand(()->shooterSubsysem.stopShootingWithVelocity()));
          joystick.pov(90).onTrue(new InstantCommand(()->intakeSubsystem.goToDownPositionCommand()));
@@ -128,14 +135,11 @@ public class RobotContainer {
 
         joystick.x().whileTrue(new InstantCommand(()-> intakeSubsystem.moveUpwards()));
         joystick.y().whileTrue(new InstantCommand(()-> intakeSubsystem.moveDownwards()));
-        
+
     }
 
     public Command getAutonomousCommand() {
-        return 
-        null;
-        
-        
+        return AutoBuilder.buildAuto(autoChooser.getSelected());
     }
 
 }
