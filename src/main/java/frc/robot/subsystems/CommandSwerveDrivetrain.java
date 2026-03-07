@@ -67,6 +67,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     /* Keep track if we've ever applied the operator perspective before or not */
     private boolean m_hasAppliedOperatorPerspective = false;
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric();
+    private final SwerveRequest.RobotCentric autoDrive = new SwerveRequest.RobotCentric();
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
     private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
@@ -233,9 +234,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             this::resetPose,
             () -> getState().Speeds,
             (speeds, feedforwards) -> setControl(
-                drive.withVelocityX(speeds.vxMetersPerSecond)
-                     .withVelocityY(speeds.vyMetersPerSecond)
-                     .withRotationalRate(speeds.omegaRadiansPerSecond)
+                autoDrive.withVelocityX(speeds.vxMetersPerSecond)
+                         .withVelocityY(speeds.vyMetersPerSecond)
+                         .withRotationalRate(speeds.omegaRadiansPerSecond)
             ),
             new PPHolonomicDriveController(
                 new PIDConstants(5.0, 0.0, 0.0),
