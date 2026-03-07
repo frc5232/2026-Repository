@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -54,7 +55,7 @@ public class RobotContainer {
     // private final Constants mConstants = new Constants();
    // private final StateMachine stateSubsystem = new StateMachine(intakeSubsystem,shooterSubsysem,drivetrainSubsystem);
 
-    private final SendableChooser<String> autoChooser = new SendableChooser<>();
+    private final SendableChooser<Command> autoChooser = new SendableChooser<>();
 
     public RobotContainer() {
 //        intakeSubsystem = new Intake();
@@ -65,8 +66,9 @@ public class RobotContainer {
         // NamedCommands.registerCommand("IntakeDown",intakeSubsystem.goToDownPositionCommand());
         configureBindings();
 
-        autoChooser.setDefaultOption("Left", "left");
-        autoChooser.addOption("Right", "right");
+        autoChooser.setDefaultOption("Left", AutoBuilder.buildAuto("left"));
+        autoChooser.addOption("Right", AutoBuilder.buildAuto("right"));
+
         SmartDashboard.putData("Auto Chooser", autoChooser);
         // SignalLogger.setPath("/media/sda1/");
        //SignalLogger.start();
@@ -139,7 +141,8 @@ public class RobotContainer {
     }
 
     public Command getAutonomousCommand() {
-        return AutoBuilder.buildAuto(autoChooser.getSelected());
+        return new SequentialCommandGroup(drivetrainSubsystem.applyRequest(()-> drive.withVelocityX(4)).withTimeout(1)).withTimeout(1).andThen(drivetrainSubsystem.applyRequest(()->drive.withVelocityY(-5)).withTimeout(2));
+        //return autoChooser.getSelected();
     }
 
 }
