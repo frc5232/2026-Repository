@@ -18,57 +18,23 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Autov2 extends SubsystemBase {
   /** Creates a new Autov2. */
-  public CommandSwerveDrivetrain drivetrain;
-  PathPlannerAuto mAuto;
-  public Autov2(CommandSwerveDrivetrain dCommandSwerveDrivetrain){
-    this.drivetrain = dCommandSwerveDrivetrain;
-    
+    private final SendableChooser<Command> m_autoChooser;
+
+
+    // --- Auto Chooser ---
+
+    m_autoChooser = new SendableChooser<>();
+    m_autoChooser.setDefaultOption("None", null);
+
+    // Add autos to chooser
+    m_autoChooser.addOption("left", AutoBuilder.buildAuto("left"));
+    m_autoChooser.addOption("right", AutoBuilder.buildAuto("right"));
+
+
+    SmartDashboard.putData("Auto Chooser", m_autoChooser);
   }
-  public Command autoBuilder(){
-   
-   mAuto = pickAndFollowAuto();
-   
-   return mAuto;
-  // return AutoBuilder.buildAuto(mAuto.getName());
 
-  }
-  private PathPlannerAuto pickAndFollowAuto(){
-    double x = drivetrain.getState().Pose.getX();
-    double y = drivetrain.getState().Pose.getY();
-
-    if(x > 7){
-      if(y > 5){
-        mAuto = new PathPlannerAuto("Left blue part 1");
-        
-        return mAuto;
-      }else if(y < 3){
-        mAuto = new PathPlannerAuto("Left blue part 1");
-        return mAuto;
-      }else{
-        mAuto = new PathPlannerAuto("Left blue part 1");
-        AutoBuilder.buildAuto(mAuto.getName());
-        return mAuto;
-      }
-    }else{
-      if(y > 5){
-        mAuto = new PathPlannerAuto("Left blue part 1");
-        AutoBuilder.buildAuto(mAuto.getName());
-        return mAuto;
-      }else if(y < 3){
-        mAuto = new PathPlannerAuto("Left blue part 1");
-        AutoBuilder.buildAuto(mAuto.getName());
-        return mAuto;
-      }else{
-        mAuto = new PathPlannerAuto("Left blue part 1");
-        AutoBuilder.buildAuto(mAuto.getName());
-        return mAuto;
-      }
-    }
-
-
-  }
-  @Override
-  public void periodic() {
-    // This method will be called once per scheduler run
+  public Command getAutonomousCommand() {
+    return m_autoChooser.getSelected();
   }
 }
