@@ -47,9 +47,9 @@ public class Intake extends SubsystemBase {
    * our command to go to our down position using a set control until were at our
    * down positon
    */
-  public Command goToDownPositionCommand() {
+  public void goToDownPositionCommand() {
     
-    SmartDashboard.putNumber("testtt", 1);
+    
        tryToBeAtDownPose = true;
       tryToBeAtStartPose = false;
        double x =absoluteEncoder.get();
@@ -61,7 +61,7 @@ public class Intake extends SubsystemBase {
       
        moveToFloorTalonFX.setControl(mRequest.withPosition((moveToFloorTalonFX.getPosition().getValueAsDouble() - 0.5)));
     }}
-       return new InstantCommand(()->spinningMotor.setControl(new VelocityVoltage(30.99)));
+       spinningMotor.setControl(new VelocityVoltage(35));
        
       
      

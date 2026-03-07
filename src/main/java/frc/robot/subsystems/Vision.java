@@ -15,12 +15,17 @@ import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonUtils;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -64,6 +69,7 @@ public class Vision extends SubsystemBase {
     // camerasHaveTargets.add(1,false);
     // camerasHaveTargets.add(2,false);
     photonPoseEstimators.add(new PhotonPoseEstimator(aprilTagFieldLayouts, camera1Pos));
+    listOfCameras.get(0).setDriverMode(true);
   }
 
   /**
@@ -114,7 +120,7 @@ public class Vision extends SubsystemBase {
       }
 
     }
-
+    
     // mCommandSwerveDrivetrain.addVisionMeasurement(currentPose3d.toPose2d(),mEstimatedRobotPose.get().timestampSeconds);
 
     // updating our current pose with our total values then dividing by amount of
@@ -129,6 +135,9 @@ public class Vision extends SubsystemBase {
       // then here we will pass into vision
     }
   }
+
+
+
 
   /**
    * 
@@ -205,6 +214,6 @@ public class Vision extends SubsystemBase {
     // This method will be called once per scheduler run
     checkallCameras(listOfCameras);
     calculatePose();
-
+    
   }
 }

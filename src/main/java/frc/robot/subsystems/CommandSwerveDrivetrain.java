@@ -7,31 +7,47 @@ import java.util.function.Supplier;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
-import com.ctre.phoenix6.configs.jni.ConfigJNI;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
+import com.ctre.phoenix6.swerve.*;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
+import com.ctre.phoenix6.swerve.SwerveModuleConstantsFactory;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.ctre.phoenix6.swerve.SwerveModule.ModuleRequest;
+import com.ctre.phoenix6.swerve.jni.SwerveJNI.ModuleState;
+import com.ctre.phoenix6.swerve.utility.WheelForceCalculator.Feedforwards;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.util.DriveFeedforwards;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.Kinematics;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveDriveOdometry3d;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.Encoder;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-
-import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
-
+import frc.robot.generated.Comp1TunerConstatnts;
+import frc.robot.generated.Comp1TunerConstatnts.TunerSwerveDrivetrain;
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
  * Subsystem so it can easily be used in command-based projects.
@@ -55,11 +71,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
     private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
     private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
-    public static RobotConfig config;
+    private static RobotConfig config;
     
+  
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
     private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
-       
         new SysIdRoutine.Config(
             null,        // Use default ramp rate (1 V/s)
             Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
@@ -130,49 +146,50 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * @param drivetrainConstants   Drivetrain-wide constants for the swerve drive
      * @param modules               Constants for each specific module
      */
+
+
+     //this is one we use
     public CommandSwerveDrivetrain(
         SwerveDrivetrainConstants drivetrainConstants,
         SwerveModuleConstants<?, ?, ?>... modules
     ) {
+        
         super(drivetrainConstants, modules);
         if (Utils.isSimulation()) {
             startSimThread();
-        }
-
+        }   }
+//            try{
+//                config =RobotConfig.fromGUISettings();
+//            }catch(Exception e){
+//                e.printStackTrace();
+//            }
+          
+//            AutoBuilder.configure(
+//                 this::getPose, 
+//                 this::resetPose, 
+//                 ()->( getKinematics().toChassisSpeeds(getState().ModuleStates)), 
+//                 (speeds,Feedforwards) -> driveWithSpeedAndFeedForwards(speeds), 
+//                 new PPHolonomicDriveController(
+//                   new PIDConstants(20,0,0),
+//                   new PIDConstants(20,0,0)
+//                   ),
+//                 config, 
+//                 ()->true,
+//                  this);
+//        }         
+//        public void driveWithSpeedAndFeedForwards(ChassisSpeeds m){
+//            applyRequest(()->drive.withVelocityX(m.vxMetersPerSecond));
+//            applyRequest(()-> drive.withVelocityY(m.vyMetersPerSecond));
+//            applyRequest(()-> drive.withRotationalRate(m.omegaRadiansPerSecond));
         
-    try{
-       CommandSwerveDrivetrain.config = RobotConfig.fromGUISettings();
-     } catch (Exception e) {
-       // Handle exception as needed
-       e.printStackTrace();
-     }
+//        }
+// // // //     
+//       private Pose2d getPose(){
+//           return getState().Pose;
+//       }     
+    
 
-     // Configure AutoBuilder last
-     AutoBuilder.configure(
-             ()->getState().Pose, // Robot pose supplier
-             this::resetPose, // Method to reset odometry (will be called if your auto has a starting pose)
-             ()->getState().Speeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-             (speeds, feedforwards) -> new SequentialCommandGroup(applyRequest(()->drive.withVelocityX(speeds.vxMetersPerSecond)),applyRequest(()->drive.withVelocityY(speeds.vyMetersPerSecond)),applyRequest(()-> drive.withRotationalRate(speeds.omegaRadiansPerSecond))), // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also optionally outputs individual module feedforwards
-             new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
-                     new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
-                     new PIDConstants(5.0, 0.0, 0.0) // Rotation PID constants
-             ),
-             config, // The robot configuration
-             () -> {
-               // Boolean supplier that controls when the path will be mirrored for the red alliance
-    //           // This will flip the path being followed to the red side of the field.
-    //           // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
-
-               var alliance = DriverStation.getAlliance();
-               if (alliance.isPresent()) {
-                 return alliance.get() == DriverStation.Alliance.Red;
-               }
-               return false;
-             },
-             this // Reference to this subsystem to set requirements
-     );
-    }
-
+    
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
      * <p>
@@ -195,37 +212,38 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         if (Utils.isSimulation()) {
             startSimThread();
         }
-         try{
-       CommandSwerveDrivetrain.config = RobotConfig.fromGUISettings();
-     } catch (Exception e) {
-       // Handle exception as needed
-       e.printStackTrace();
-     }
+       
+       try{
+      CommandSwerveDrivetrain.config = RobotConfig.fromGUISettings();
+    } catch (Exception e) {
+      // Handle exception as needed
+      e.printStackTrace();
+    }
 
-     // Configure AutoBuilder last
-     AutoBuilder.configure(
-             ()->getState().Pose, // Robot pose supplier
-             this::resetPose, // Method to reset odometry (will be called if your auto has a starting pose)
-             ()->getState().Speeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-             (speeds, feedforwards) -> new SequentialCommandGroup(applyRequest(()->drive.withVelocityX(speeds.vxMetersPerSecond)),applyRequest(()->drive.withVelocityY(speeds.vyMetersPerSecond)),applyRequest(()-> drive.withRotationalRate(speeds.omegaRadiansPerSecond))), // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also optionally outputs individual module feedforwards
-             new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
-                     new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
-                     new PIDConstants(5.0, 0.0, 0.0) // Rotation PID constants
-             ),
-             config, // The robot configuration
-             () -> {
-               // Boolean supplier that controls when the path will be mirrored for the red alliance
-    //           // This will flip the path being followed to the red side of the field.
-    //           // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+    // Configure AutoBuilder last
+    AutoBuilder.configure(
+            ()->getState().Pose, // Robot pose supplier
+            this::resetPose, // Method to reset odometry (will be called if your auto has a starting pose)
+            ()->getState().Speeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+            (speeds, feedforwards) ->  new SequentialCommandGroup(applyRequest(()->drive.withVelocityX(speeds.vxMetersPerSecond)),applyRequest(()->drive.withVelocityY(speeds.vyMetersPerSecond)),applyRequest(()-> drive.withRotationalRate(speeds.omegaRadiansPerSecond))), // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also optionally outputs individual module feedforwards
+            new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
+                    new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
+                    new PIDConstants(5.0, 0.0, 0.0) // Rotation PID constants
+            ),
+            CommandSwerveDrivetrain.config, // The robot configuration
+            () -> {
+              // Boolean supplier that controls when the path will be mirrored for the red alliance
+              // This will flip the path being followed to the red side of the field.
+              // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
 
-               var alliance = DriverStation.getAlliance();
-               if (alliance.isPresent()) {
-                 return alliance.get() == DriverStation.Alliance.Red;
-               }
-               return false;
-             },
-             this // Reference to this subsystem to set requirements
-     );
+              var alliance = DriverStation.getAlliance();
+              if (alliance.isPresent()) {
+                return alliance.get() == DriverStation.Alliance.Red;
+              }
+              return false;
+            },
+            this // Reference to this subsystem to set requirements
+    );
     }
 
     /**
@@ -258,37 +276,37 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         if (Utils.isSimulation()) {
             startSimThread();
         }
-         try{
-       CommandSwerveDrivetrain.config = RobotConfig.fromGUISettings();
-     } catch (Exception e) {
-       // Handle exception as needed
-       e.printStackTrace();
-     }
+        try{
+      CommandSwerveDrivetrain.config = RobotConfig.fromGUISettings();
+    } catch (Exception e) {
+      // Handle exception as needed
+      e.printStackTrace();
+    }
 
-     // Configure AutoBuilder last
-     AutoBuilder.configure(
-             ()->getState().Pose, // Robot pose supplier
-             this::resetPose, // Method to reset odometry (will be called if your auto has a starting pose)
-             ()->getState().Speeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-             (speeds, feedforwards) -> new SequentialCommandGroup(applyRequest(()->drive.withVelocityX(speeds.vxMetersPerSecond)),applyRequest(()->drive.withVelocityY(speeds.vyMetersPerSecond)),applyRequest(()-> drive.withRotationalRate(speeds.omegaRadiansPerSecond))), // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also optionally outputs individual module feedforwards
-             new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
-                     new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
-                     new PIDConstants(5.0, 0.0, 0.0) // Rotation PID constants
-             ),
-             config, // The robot configuration
-             () -> {
-               // Boolean supplier that controls when the path will be mirrored for the red alliance
+    // Configure AutoBuilder last
+    // AutoBuilder.configure(
+    //         ()->getState().Pose, // Robot pose supplier
+    //         this::resetPose, // Method to reset odometry (will be called if your auto has a starting pose)
+    //         ()->getState().Speeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+    //         (speeds, feedforwards) -> , // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also optionally outputs individual module feedforwards
+    //         new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
+    //                 new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
+    //                 new PIDConstants(5.0, 0.0, 0.0) // Rotation PID constants
+    //         ),
+    //         config, // The robot configuration
+    //         () -> {
+    //           // Boolean supplier that controls when the path will be mirrored for the red alliance
     //           // This will flip the path being followed to the red side of the field.
     //           // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
 
-               var alliance = DriverStation.getAlliance();
-               if (alliance.isPresent()) {
-                 return alliance.get() == DriverStation.Alliance.Red;
-               }
-               return false;
-             },
-             this // Reference to this subsystem to set requirements
-     );
+    //           var alliance = DriverStation.getAlliance();
+    //           if (alliance.isPresent()) {
+    //             return alliance.get() == DriverStation.Alliance.Red;
+    //           }
+    //           return false;
+    //         },
+    //         this // Reference to this subsystem to set requirements
+    // );
     }
 
     /**
