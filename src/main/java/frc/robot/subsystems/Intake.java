@@ -26,10 +26,11 @@ public class Intake extends SubsystemBase {
   private boolean tryToBeAtDownPose = false;
   private boolean tryToBeAtStartPose = false;
   private double encoderPosition;
-    public Intake() {
+
+  public Intake() {
     moveToFloorTalonFX = new TalonFX(8);
     absoluteEncoder = new DutyCycleEncoder(0);
-    
+
     moveToFloorTalonFX.getConfigurator().apply(Constants.talonIntakeCon.INTAKE_MOTOR_CONFIG);
 
     spinningMotor = new TalonFX(Constants.talonIntakeCon.SPIN_MOTOR_ID);
@@ -37,56 +38,62 @@ public class Intake extends SubsystemBase {
     // our upper position
     encoderConstant = Constants.talonIntakeCon.ENCODER_STARTING_POSITION;
     // our down positon
-    encoderDownPos  = 0.32;
-      
+    encoderDownPos = 0.32;
+
   }
-  private void updateEncoderPose(){
+
+  private void updateEncoderPose() {
     encoderPosition = absoluteEncoder.get();
   }
+
   /**
    * our command to go to our down position using a set control until were at our
    * down positon
    */
   public void goToDownPositionCommand() {
-    
-    
-       tryToBeAtDownPose = true;
-      tryToBeAtStartPose = false;
-       double x =absoluteEncoder.get();
-       if(!( x>= encoderDownPos && x < 0.8)){
-        while(atDownPosition() == false){
-      moveToFloorTalonFX.setControl(mRequest.withPosition((moveToFloorTalonFX.getPosition().getValueAsDouble() + 0.5)));
-    } }else{
+
+    tryToBeAtDownPose = true;
+    tryToBeAtStartPose = false;
+    double x = absoluteEncoder.get();
+    if (!(x >= encoderDownPos && x < 0.8)) {
       while (atDownPosition() == false) {
-      
-       moveToFloorTalonFX.setControl(mRequest.withPosition((moveToFloorTalonFX.getPosition().getValueAsDouble() - 0.5)));
-    }}
-       spinningMotor.setControl(new VelocityVoltage(35));
-       
-      
-     
-    
-    
-   
-  }
-  public void moveDownwards(){
-    moveToFloorTalonFX.setControl(mRequest.withPosition(moveToFloorTalonFX.getPosition().getValueAsDouble() +1));
+        moveToFloorTalonFX
+            .setControl(mRequest.withPosition((moveToFloorTalonFX.getPosition().getValueAsDouble() + 0.5)));
+      }
+    } else {
+      while (atDownPosition() == false) {
+
+        moveToFloorTalonFX
+            .setControl(mRequest.withPosition((moveToFloorTalonFX.getPosition().getValueAsDouble() - 0.5)));
+      }
+    }
+    spinningMotor.setControl(new VelocityVoltage(35));
 
   }
-  public void moveUpwards(){
-    moveToFloorTalonFX.setControl(mRequest.withPosition(moveToFloorTalonFX.getPosition().getValueAsDouble()-1));
+
+  public void moveDownwards() {
+    moveToFloorTalonFX.setControl(mRequest.withPosition(moveToFloorTalonFX.getPosition().getValueAsDouble() + 1));
+
   }
+
+  public void moveUpwards() {
+    moveToFloorTalonFX.setControl(mRequest.withPosition(moveToFloorTalonFX.getPosition().getValueAsDouble() - 1));
+  }
+
   /*
    * This is our command to go to our starting pose by chaining our movement to
    * starting pose and saying to do it
    * until startingpose returns true
    */
   public void gotoStartPositonCommand() {
-     spinningMotor.setControl(new VelocityVoltage(2));
-    while(atStartingPosition() == false){moveToFloorTalonFX.setControl(new MotionMagicExpoVoltage(moveToFloorTalonFX.getPosition().getValueAsDouble() - 0.5));}
-      tryToBeAtStartPose = true;
-      tryToBeAtDownPose = false;
-  
+    spinningMotor.setControl(new VelocityVoltage(2));
+    while (atStartingPosition() == false) {
+      moveToFloorTalonFX
+          .setControl(new MotionMagicExpoVoltage(moveToFloorTalonFX.getPosition().getValueAsDouble() - 0.5));
+    }
+    tryToBeAtStartPose = true;
+    tryToBeAtDownPose = false;
+
   }
 
   /**
@@ -102,9 +109,9 @@ public class Intake extends SubsystemBase {
    */
   private boolean atStartingPosition() {
     double x = absoluteEncoder.get();
-    if(x > 0.95 || x < 0.03){
+    if (x > 0.95 || x < 0.03) {
       return true;
-    }else{
+    } else {
       return false;
     }
   }
@@ -117,35 +124,16 @@ public class Intake extends SubsystemBase {
    */
   private boolean atDownPosition() {
     double x = absoluteEncoder.get();
-    if(x <= encoderDownPos + 0.01 && x >= encoderDownPos - 0.01 ){
+    if (x <= encoderDownPos + 0.01 && x >= encoderDownPos - 0.01) {
       return true;
-    }else{
+    } else {
       return false;
     }
   }
-  
+
   @Override
   public void periodic() {
-   
-    if(tryToBeAtDownPose == true){
-      if(atDownPosition() == false){
-        if(absoluteEncoder.get() >= encoderDownPos){
-          moveToFloorTalonFX.setControl(mRequest.withPosition(moveToFloorTalonFX.getPosition().getValueAsDouble() -0.5));
-        }else{
-          moveToFloorTalonFX.setControl(mRequest.withPosition(moveToFloorTalonFX.getPosition().getValueAsDouble() + 0.5));
-        }
-      }
-    }
-    if(tryToBeAtStartPose == true){
-      if(atStartingPosition() == false){
-        if(absoluteEncoder.get() <= encoderConstant  && absoluteEncoder.get() < 0.05){
-          moveToFloorTalonFX.setControl(mRequest.withPosition(moveToFloorTalonFX.getPosition().getValueAsDouble() -0.5));
-        }else{
-          moveToFloorTalonFX.setControl(mRequest.withPosition(moveToFloorTalonFX.getPosition().getValueAsDouble() + 0.5));
-        }
-      }
-    }
-    
+
   }
-  
+
 }

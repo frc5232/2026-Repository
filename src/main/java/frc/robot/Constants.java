@@ -61,11 +61,18 @@ public final class Constants {
 
   }
   public class shooterMotorCon{
-    public static final TalonFXConfiguration CONSTANT_MOTOR_CONFIG = new TalonFXConfiguration();
-    public static final TalonFXConfiguration CONSTANT_MOTOR2_CONFIG = new TalonFXConfiguration();
+    public static final TalonFXConfiguration UPPER_MOTOR_CONFIG= new TalonFXConfiguration();
+    public static final TalonFXConfiguration LOWER_MOTOR_CONFIG = new TalonFXConfiguration();
+    public static final TalonFXConfiguration INDEX_MOTOR_CONFIG = new TalonFXConfiguration();
+    public static final int lowerShooter = 6;
+    public static final int upperShooter = 1;
+    public static final int indexer = 3;
     static{
-      CONSTANT_MOTOR_CONFIG.Slot0.kP = 0.4;
-      CONSTANT_MOTOR2_CONFIG.Slot0.kP = 0.4;
+     UPPER_MOTOR_CONFIG.Slot0.kP = 0.4;
+     LOWER_MOTOR_CONFIG.Slot0.kP = 0.4;
+     INDEX_MOTOR_CONFIG.Slot0.kP = 0.4;
+     
+
     }
   }
   
