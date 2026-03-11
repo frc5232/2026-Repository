@@ -51,6 +51,11 @@ public final class Constants {
     public static final TalonFXConfiguration SPIN_MOTOR_CONFIG = new TalonFXConfiguration();
     public static int SPIN_MOTOR_ID = 55;
     public static final TalonFXConfiguration INTAKE_MOTOR_CONFIG = new TalonFXConfiguration();
+    private static final double gearRatioForIntake = 0.05;
+    private static final int ticksPerRevolution = 40960;
+    public static final double countsPerDegree  = gearRatioForIntake * ticksPerRevolution/360;
+    // intake tooth is 16
+    
     static {
       // in case forget intake motor up and down is kP of 6 kD of 0.005
       INTAKE_MOTOR_CONFIG.Slot0.kP = 2;
@@ -71,7 +76,7 @@ public final class Constants {
      UPPER_MOTOR_CONFIG.Slot0.kP = 0.4;
      LOWER_MOTOR_CONFIG.Slot0.kP = 0.4;
      INDEX_MOTOR_CONFIG.Slot0.kP = 0.4;
-     
+
 
     }
   }
