@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -81,11 +82,11 @@ public class Aiming extends SubsystemBase {
    * sets the value of the hub pose based off of what alliance we are in
    */
   private void pickHubPose() {
-    if (DriverStation.getAlliance().get().toString() == "red") {
+    
       staticHubPose2d = new Pose2d(Units.inchesToMeters(469.11), Units.inchesToMeters(159.1), new Rotation2d(0));
-    } else {
+    
       staticHubPose2d = new Pose2d(Units.inchesToMeters(182.11), Units.inchesToMeters(159.1), new Rotation2d(0));
-    }
+    
   }
   /**
    * 

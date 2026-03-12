@@ -42,7 +42,7 @@ public class Vision extends SubsystemBase {
   private PhotonPoseEstimator estimator;
   private Pose3d lastPose3d;
   private CommandSwerveDrivetrain drivetrain;
-  private ArrayList<PhotonPoseEstimator> photonPoseEstimators;
+  private ArrayList<PhotonPoseEstimator> photonPoseEstimators =  new ArrayList<>();
 
   public Vision(CommandSwerveDrivetrain mCommandSwerveDrivetrain) {
     this.drivetrain = mCommandSwerveDrivetrain;
@@ -56,7 +56,7 @@ public class Vision extends SubsystemBase {
     camerasHaveTargets.add(0, false);
 
     photonPoseEstimators.add(new PhotonPoseEstimator(aprilTagFieldLayouts, camera1Pos));
-    listOfCameras.get(0).setDriverMode(true);
+
   }
 
   /**

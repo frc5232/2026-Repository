@@ -5,6 +5,7 @@
 
 package frc.robot.subsystems;
 
+import java.util.ArrayList;
 import java.util.List;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.VecBuilder;
@@ -18,6 +19,7 @@ import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -34,7 +36,8 @@ public class Auto extends SubsystemBase {
   private TrajectoryConfig trajectoryConfig;
   private LTVUnicycleController ltvController;
   private ChassisSpeeds chassisSpeeds;
-  private  List<Translation2d> mList;
+  public List<Translation2d> mList;
+  public ArrayList<Translation2d> mArrayList = new ArrayList<>();
   public Auto(CommandSwerveDrivetrain drivetrain, SwerveRequest.FieldCentric mCentric) {
     drivetrainAuto = drivetrain;
     drive = mCentric;
@@ -43,8 +46,8 @@ public class Auto extends SubsystemBase {
     trajectory = new Trajectory();
     // we can tune this some more when we are at arc field
     // this is for path of the auto from start to where we want to be
-    ltvController = new LTVUnicycleController(VecBuilder.fill(0.0625, 0.125, 2.0), VecBuilder.fill(1.0, 2.0), 0.02, 9);
-    PickAutoToRun();
+    ltvController = new LTVUnicycleController(VecBuilder.fill(1, 1, 2.0), VecBuilder.fill(10.0, 20.0), 0.02, 9);
+    
   }
 
   /**
@@ -59,8 +62,8 @@ public class Auto extends SubsystemBase {
    *          into it
    * @param g - is our goal pose
    */
-  private Trajectory trejGen(Pose2d c, Pose2d g, List<Translation2d> nList) {
-    trajectoryConfig = new TrajectoryConfig(5, 2);
+  private Trajectory trejGen(Pose2d c, Pose2d g, ArrayList<Translation2d> nList) {
+    trajectoryConfig = new TrajectoryConfig(100, 100);
     /**
      * might end up having the list of get passed in but for now we are just having
      * the point to go through be the starting point
@@ -68,6 +71,7 @@ public class Auto extends SubsystemBase {
 
    
     trajectory = TrajectoryGenerator.generateTrajectory(c, nList, g, trajectoryConfig);   
+    
     return trajectory;
   }
 
@@ -79,12 +83,14 @@ public class Auto extends SubsystemBase {
    *         rotations of our drivetrain
    */
   private ChassisSpeeds mGenSpeeds(Trajectory tj, LTVUnicycleController cont) {
-    if (firstRunOfTraj) {
+    if (this.firstRunOfTraj) {
       chassisSpeeds = cont.calculate(currentPose2d, tj.sample(tj.getTotalTimeSeconds()));
+     
       return chassisSpeeds;
     }
     chassisSpeeds = cont.calculate(currentPose2d, tj.sample(0));
-    firstRunOfTraj = true;
+    
+    this.firstRunOfTraj = true;
     return chassisSpeeds;
   }
 
@@ -93,7 +99,7 @@ public class Auto extends SubsystemBase {
    * @param mSpeeds our chassis speeds getting passed into the drivetrain
    */
   
-  private boolean followAuto(ChassisSpeeds mSpeeds) {
+  private Command followAuto(ChassisSpeeds mSpeeds) {
     /**
      * Making chassisSpeeds using our controller and how far we are in the
      * trajectory
@@ -102,6 +108,7 @@ public class Auto extends SubsystemBase {
      * close enough to goal pose it just skips over it using if statement
      * 
      */
+  
     if (checking(currentPose2d, goalPose2d, 'x')) {
       mSpeeds.vxMetersPerSecond = 0;
     }
@@ -111,10 +118,8 @@ public class Auto extends SubsystemBase {
     if (checking(currentPose2d, goalPose2d, 'r')) {
       mSpeeds.omegaRadiansPerSecond = 0;
     }
-    if(mSpeeds.omegaRadiansPerSecond == 0 && mSpeeds.vxMetersPerSecond ==0 && mSpeeds.vyMetersPerSecond == 0){
-      return false;
-    }
-    new SequentialCommandGroup(new InstantCommand(
+    
+    return new SequentialCommandGroup(new InstantCommand(
         () -> drivetrainAuto.applyRequest(() -> drive.withVelocityX(mSpeeds.vxMetersPerSecond)))
         .alongWith(
             new InstantCommand(() -> drivetrainAuto.applyRequest(() -> drive.withVelocityY(mSpeeds.vyMetersPerSecond)))
@@ -122,7 +127,7 @@ public class Auto extends SubsystemBase {
                     () -> drivetrainAuto.applyRequest(() -> drive.withRotationalRate(mSpeeds.omegaRadiansPerSecond))))
         ));
                     
-    return true;
+    
 
   }
 
@@ -138,10 +143,13 @@ public class Auto extends SubsystemBase {
    *         trajectory gen and following
    */
 
-  public Pose2d PickAutoToRun() {
-    mList.add(new Translation2d());
-    trejGen(currentPose2d, goalPose2d,mList);
-    return goalPose2d;
+  public Command PickAutoToRun() {
+    
+   // this.mList.add(new Translation2d(3.2,7.3));
+    this.goalPose2d = new Pose2d(7.7,6.3, new Rotation2d(90));
+    mArrayList.add(new Translation2d(3.2,7.3));
+   return followAuto(mGenSpeeds(trejGen(currentPose2d, goalPose2d,mArrayList),ltvController));
+    
   
       
   }
