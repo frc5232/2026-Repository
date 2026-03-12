@@ -4,28 +4,19 @@
 
 package frc.robot.subsystems;
 
-import java.lang.constant.Constable;
 import java.util.ArrayList;
 import java.util.Optional;
 
-import org.opencv.photo.Photo;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
-import org.photonvision.PhotonUtils;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -57,17 +48,13 @@ public class Vision extends SubsystemBase {
     this.drivetrain = mCommandSwerveDrivetrain;
 
     camera = new PhotonCamera("frontFacingCamera");
-    // camera2 = new PhotonCamera("leftFacingCamera");
-    // camera3 = new PhotonCamera("BackFacingCamera");
+
     listOfCameras.add(0, camera);
-    // listOfCameras.add(1, camera2);
-    // listOfCameras.add(1,camera3);
+
     robotToCam.add(0, camera1Pos);
-    // robotToCam.add(1, camera2Pos);
-    // robotToCam.add(1,camera3Pos);
+
     camerasHaveTargets.add(0, false);
-    // camerasHaveTargets.add(1,false);
-    // camerasHaveTargets.add(2,false);
+
     photonPoseEstimators.add(new PhotonPoseEstimator(aprilTagFieldLayouts, camera1Pos));
     listOfCameras.get(0).setDriverMode(true);
   }
@@ -96,17 +83,7 @@ public class Vision extends SubsystemBase {
         // checks if our fidlical id is present
         // doesnt currently do anything so im wondering if its needed or not for
         // anything
-        // if
-        // (aprilTagFieldLayouts.getTagPose(m.getLatestResult().getBestTarget().getFiducialId()).isPresent())
-        // {
-        // // updates our current pose with the camera transformation,pose of the id we
-        // // see,and our camera position on the robot
-        // currentPose3d = PhotonUtils.estimateFieldToRobotAprilTag(
-        // m.getLatestResult().getBestTarget().getBestCameraToTarget(),
-        // aprilTagFieldLayouts.getTagPose(m.getLatestResult().getBestTarget().getFiducialId()).get(),
-        // robotToCam.get(i));
-        // }
-        // sets ouir
+
         estimatedRobotPose = estimator.estimateCoprocMultiTagPose(m.getLatestResult());
         if (estimatedRobotPose.isEmpty()) {
           estimatedRobotPose = estimator.estimateLowestAmbiguityPose(m.getLatestResult());
@@ -120,7 +97,7 @@ public class Vision extends SubsystemBase {
       }
 
     }
-    
+
     // mCommandSwerveDrivetrain.addVisionMeasurement(currentPose3d.toPose2d(),mEstimatedRobotPose.get().timestampSeconds);
 
     // updating our current pose with our total values then dividing by amount of
@@ -128,16 +105,15 @@ public class Vision extends SubsystemBase {
     if (size != 0) {
       if (checkPoseForAnomilies(
           new Pose3d(dx / size, dy / size, dz / size, new Rotation3d(new Rotation2d(dR / size))))) {
-        // then here we will pass into vision
+
         lastPose3d = currentPose3d;
         drivetrain.addVisionMeasurement(currentPose3d.toPose2d(), Timer.getFPGATimestamp());
+      } else {
+        drivetrain.addVisionMeasurement(lastPose3d.toPose2d(), Timer.getFPGATimestamp());
       }
-      // then here we will pass into vision
+
     }
   }
-
-
-
 
   /**
    * 
@@ -214,6 +190,6 @@ public class Vision extends SubsystemBase {
     // This method will be called once per scheduler run
     checkallCameras(listOfCameras);
     calculatePose();
-    
+
   }
 }

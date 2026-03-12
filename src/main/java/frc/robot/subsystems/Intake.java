@@ -8,7 +8,6 @@ import java.util.function.Consumer;
 
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
-import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.math.util.Units;
@@ -19,8 +18,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
 
 public class Intake extends SubsystemBase {
@@ -28,41 +27,65 @@ public class Intake extends SubsystemBase {
   private Consumer<Boolean> m_blankBool;
   public DutyCycleEncoder absoluteEncoder;
   private MotionMagicExpoVoltage mRequest = new MotionMagicExpoVoltage(0);
+  private DutyCycleOut mCycleOut = new DutyCycleOut(0);
   private TalonFX moveToFloorTalonFX;
   private TalonFX spinningMotor;
   private double encoderConstant;
   private double encoderDownPos;
   private double encoderPosition;
+  private Trigger startSpinning;
 
   public Intake() {
     moveToFloorTalonFX = new TalonFX(8);
+
     absoluteEncoder = new DutyCycleEncoder(0);
 
     moveToFloorTalonFX.getConfigurator().apply(Constants.talonIntakeCon.INTAKE_MOTOR_CONFIG);
 
     spinningMotor = new TalonFX(Constants.talonIntakeCon.SPIN_MOTOR_ID);
+
     spinningMotor.getConfigurator().apply(Constants.talonIntakeCon.SPIN_MOTOR_CONFIG);
 
     encoderConstant = Constants.talonIntakeCon.ENCODER_STARTING_POSITION;
 
-    encoderDownPos = 0.32;
-    
-   // moveToFloorTalonFX.setPosition(Units.degreesToRotations(90*absoluteEncoder.get()));
+    encoderDownPos = Constants.talonIntakeCon.ENCODER_DOWN_POSITION;
+
+    moveToFloorTalonFX.setPosition(0);
+
+    startSpinning = new Trigger(() -> goalPos());
+
 
   }
-
+  /**
+   * Position at bottom = 0.31 encoder
+   * Position at middle = 0.62 encoder
+   * Position at top = 0.93 encoder
+   * 
+   * 
+   * 
+   */
   public Command intakeDownCommand() {
-    return Commands.deadline(movingMotor(90), spinMotor());
+    /*
+     * Test deadline v Parrellel
+     */
+    return Commands.parallel(movingMotor(90), spinMotor(1));
   }
 
-  private Command spinMotor() {
-    return new InstantCommand(() -> spinningMotor.setControl(new DutyCycleOut(1)));
+  public Command intakeUpCommand() {
+    return Commands.parallel(spinMotor(0), movingMotor(-90));
+  
+  }
+
+  private Command spinMotor(double dutyCycleAmount) {
+    return new InstantCommand(() -> spinningMotor.setControl((mCycleOut.withOutput(dutyCycleAmount))));
   }
 
   private Command movingMotor(double goalAmount) {
-    return new FunctionalCommand(() -> moveToFloorTalonFX.setControl(mRequest.withPosition(Units.rotationsToDegrees(goalAmount))),()->{}, m_blankBool, ()->goalPos(), this);
+    return new FunctionalCommand(
+        () -> moveToFloorTalonFX.setControl(mRequest.withPosition(Units.rotationsToDegrees(-goalAmount))), () -> {
+        }, m_blankBool, startSpinning, this);
 
-    }
+  }
 
   public boolean goalPos() {
     if (absoluteEncoder.get() >= 0.3 && absoluteEncoder.get() <= 0.33) {
@@ -71,13 +94,12 @@ public class Intake extends SubsystemBase {
       return false;
     }
   }
-  private Command onEndBlankCommand(){
-    return new InstantCommand();
-  }
 
   @Override
   public void periodic() {
-
+    SmartDashboard.putNumber("encoder value",absoluteEncoder.get());
+    SmartDashboard.putNumber("Position of Motor", moveToFloorTalonFX.getPosition().getValueAsDouble());
+    SmartDashboard.putNumber("Spin motor speed",spinningMotor.getDutyCycle().getValueAsDouble());
   }
 
 }
