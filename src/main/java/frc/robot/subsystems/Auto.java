@@ -19,6 +19,8 @@ import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -43,7 +45,7 @@ public class Auto extends SubsystemBase {
     drive = mCentric;
     currentPose2d = drivetrainAuto.getState().Pose;
 
-    trajectory = new Trajectory();
+    
     // we can tune this some more when we are at arc field
     // this is for path of the auto from start to where we want to be
     ltvController = new LTVUnicycleController(VecBuilder.fill(1, 1, 2.0), VecBuilder.fill(10.0, 20.0), 0.02, 9);
@@ -63,16 +65,16 @@ public class Auto extends SubsystemBase {
    * @param g - is our goal pose
    */
   private Trajectory trejGen(Pose2d c, Pose2d g, ArrayList<Translation2d> nList) {
-    trajectoryConfig = new TrajectoryConfig(100, 100);
+    trajectoryConfig = new TrajectoryConfig(1, 1);
+    
     /**
      * might end up having the list of get passed in but for now we are just having
      * the point to go through be the starting point
      */
-
-   
-    trajectory = TrajectoryGenerator.generateTrajectory(c, nList, g, trajectoryConfig);   
+    nList.add(new Translation2d(0,1));
+    Trajectory extrajectory = TrajectoryGenerator.generateTrajectory(c, nList, g, trajectoryConfig);   
     
-    return trajectory;
+    return extrajectory;
   }
 
   /**
@@ -84,8 +86,8 @@ public class Auto extends SubsystemBase {
    */
   private ChassisSpeeds mGenSpeeds(Trajectory tj, LTVUnicycleController cont) {
     if (this.firstRunOfTraj) {
-      chassisSpeeds = cont.calculate(currentPose2d, tj.sample(tj.getTotalTimeSeconds()));
-     
+      chassisSpeeds = cont.calculate(currentPose2d,tj.sample(Timer.getFPGATimestamp()));
+      
       return chassisSpeeds;
     }
     chassisSpeeds = cont.calculate(currentPose2d, tj.sample(0));
@@ -146,8 +148,8 @@ public class Auto extends SubsystemBase {
   public Command PickAutoToRun() {
     
    // this.mList.add(new Translation2d(3.2,7.3));
-    this.goalPose2d = new Pose2d(7.7,6.3, new Rotation2d(90));
-    mArrayList.add(new Translation2d(3.2,7.3));
+    goalPose2d = new Pose2d(7,0, new Rotation2d(0));
+    mArrayList.add(new Translation2d(3.5,0));
    return followAuto(mGenSpeeds(trejGen(currentPose2d, goalPose2d,mArrayList),ltvController));
     
   

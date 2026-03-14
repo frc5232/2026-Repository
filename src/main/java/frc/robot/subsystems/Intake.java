@@ -24,7 +24,8 @@ import frc.robot.Constants;
 
 public class Intake extends SubsystemBase {
   /** Creates a new Intake. */
-  private Consumer<Boolean> m_blankBool;
+  
+  
   public DutyCycleEncoder absoluteEncoder;
   private MotionMagicExpoVoltage mRequest = new MotionMagicExpoVoltage(0);
   private DutyCycleOut mCycleOut = new DutyCycleOut(0);
@@ -34,8 +35,9 @@ public class Intake extends SubsystemBase {
   private double encoderDownPos;
   private double encoderPosition;
   private Trigger startSpinning;
-
+  
   public Intake() {
+
     moveToFloorTalonFX = new TalonFX(8);
 
     absoluteEncoder = new DutyCycleEncoder(0);
@@ -50,11 +52,15 @@ public class Intake extends SubsystemBase {
 
     encoderDownPos = Constants.talonIntakeCon.ENCODER_DOWN_POSITION;
 
-    moveToFloorTalonFX.setPosition(0);
-
+    moveToFloorTalonFX.setPosition(Math.abs(absoluteEncoder.get()-0.79) * 8.57);
+    //encoder total change is 0.7
+    goToStartPosition();
     startSpinning = new Trigger(() -> goalPos());
 
 
+  }
+  public Command goToStartPosition(){
+    return new InstantCommand(()->moveToFloorTalonFX.setControl(new MotionMagicExpoVoltage(0.3)));
   }
   /**
    * Position at bottom = 0.31 encoder
@@ -81,9 +87,11 @@ public class Intake extends SubsystemBase {
   }
 
   private Command movingMotor(double goalAmount) {
+    
+    
     return new FunctionalCommand(
         () -> moveToFloorTalonFX.setControl(mRequest.withPosition(Units.rotationsToDegrees(-goalAmount))), () -> {
-        }, m_blankBool, startSpinning, this);
+        },null, startSpinning, this);
 
   }
 
@@ -100,6 +108,7 @@ public class Intake extends SubsystemBase {
     SmartDashboard.putNumber("encoder value",absoluteEncoder.get());
     SmartDashboard.putNumber("Position of Motor", moveToFloorTalonFX.getPosition().getValueAsDouble());
     SmartDashboard.putNumber("Spin motor speed",spinningMotor.getDutyCycle().getValueAsDouble());
+   
   }
 
 }

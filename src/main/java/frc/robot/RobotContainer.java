@@ -19,6 +19,7 @@ import frc.robot.generated.Comp1TunerConstatnts;
 import frc.robot.subsystems.Aiming;
 import frc.robot.subsystems.Auto;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Vision;
 import frc.robot.subsystems.Shooting;
 public class RobotContainer {
@@ -43,7 +44,7 @@ public class RobotContainer {
     private final Vision visionSubsystem = new Vision(drivetrainSubsystem);
      private final Auto autoSubsystem = new Auto(drivetrainSubsystem,drive);
    private final Aiming aimingSubsystem = new Aiming(drivetrainSubsystem, drive);
-   private final Intake intakeSubsystem = new Intake();;
+  // private final Intake intakeSubsystem = new Intake();;
 
    private final Shooting shooterSubsystem = new Shooting();
      
@@ -107,12 +108,14 @@ public class RobotContainer {
 
         
         drivetrainSubsystem.registerTelemetry(logger::telemeterize);
-
+      //  joystick.pov(0).onTrue(intakeSubsystem.intakeDownCommand());
+        //joystick.pov(90).onTrue(intakeSubsystem.intakeUpCommand());
     }
 
     public Command getAutonomousCommand() {
         //return new SequentialCommandGroup(drivetrainSubsystem.applyRequest(()-> drive.withVelocityX(4)).withTimeout(1)).withTimeout(1).andThen(drivetrainSubsystem.applyRequest(()->drive.withVelocityY(-5)).withTimeout(2));
         return autoSubsystem.PickAutoToRun();
+      // return null;
     }
 
 }
