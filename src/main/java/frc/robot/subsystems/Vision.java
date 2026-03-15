@@ -21,11 +21,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class Vision extends SubsystemBase {
-  /** Creates a new Auto. */
-  // fasle = left, true = right
-  private boolean headingDir;
-  private boolean pastdir;
-  private double direction;
+
   private boolean calledBefore = false;
   private Pose3d currentPose3d;
   private PhotonCamera camera;
@@ -107,9 +103,9 @@ public class Vision extends SubsystemBase {
           new Pose3d(dx / size, dy / size, dz / size, new Rotation3d(new Rotation2d(dR / size))))) {
 
         lastPose3d = currentPose3d;
-        drivetrain.addVisionMeasurement(currentPose3d.toPose2d(), Timer.getFPGATimestamp());
+        drivetrain.addVisionMeasurement(currentPose3d.toPose2d(), camera.getLatestResult().getTimestampSeconds());
       } else {
-        drivetrain.addVisionMeasurement(lastPose3d.toPose2d(), Timer.getFPGATimestamp());
+        drivetrain.addVisionMeasurement(lastPose3d.toPose2d(), camera.getLatestResult().getTimestampSeconds());
       }
 
     }
@@ -122,7 +118,7 @@ public class Vision extends SubsystemBase {
    *          target
    *          if it doesnt have a target sets the other Array list to False
    */
-  private void checkallCameras(ArrayList<PhotonCamera> x) {
+  private void checkAllCameras(ArrayList<PhotonCamera> x) {
     // iterating through the cameras and checking if they have targets if they do
     // updating it to true else make it false
     for (int i = 0; i < x.size(); i++) {
@@ -134,26 +130,7 @@ public class Vision extends SubsystemBase {
     }
   }
 
-  private boolean yawFixer(Pose3d pp) {
-    // this is to fix the yaw and it was just slightly off and annoying hunter
-    if (direction == 0) {
-      direction = pp.getRotation().getMeasureZ().compareTo(lastPose3d.getRotation().getMeasureZ());
-    } else {
-      double dd = pp.getRotation().getMeasureZ().compareTo(lastPose3d.getRotation().getMeasureZ());
-      if (dd > direction) {
-        headingDir = false;
-      } else if (dd <= direction) {
-        headingDir = true;
-      }
-      if (pastdir == headingDir) {
-        return true;
-      } else if (pp.getRotation().getMeasureZ().isNear(lastPose3d.getRotation().getMeasureZ(), 0.12)) {
-        return true;
-      }
-
-    }
-    return false;
-  }
+  
 
   /**
    * 
@@ -178,7 +155,7 @@ public class Vision extends SubsystemBase {
      */
     if (!p.getMeasureX().isNear(lastPose3d.getMeasureX(), 0.1) ||
         !p.getMeasureY().isNear(lastPose3d.getMeasureY(), 0.1)
-        || !yawFixer(p)) {
+        ) {
       return false;
     } else {
       return true;
@@ -188,7 +165,7 @@ public class Vision extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    checkallCameras(listOfCameras);
+    checkAllCameras(listOfCameras);
     calculatePose();
 
   }

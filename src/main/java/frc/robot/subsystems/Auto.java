@@ -18,9 +18,7 @@ import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -28,13 +26,12 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Auto extends SubsystemBase {
   /** Creates a new Auto. */
+  private ArrayList<Translation2d> mInteriorPoints;
   private boolean firstRunOfTraj = false;
-  private boolean autoHasBeenPicked;
   private Pose2d goalPose2d;
   private Pose2d currentPose2d;
   private SwerveRequest.FieldCentric drive;
   private CommandSwerveDrivetrain drivetrainAuto;
-  private Trajectory trajectory;
   private TrajectoryConfig trajectoryConfig;
   private LTVUnicycleController ltvController;
   private ChassisSpeeds chassisSpeeds;
@@ -64,15 +61,15 @@ public class Auto extends SubsystemBase {
    *          into it
    * @param g - is our goal pose
    */
-  private Trajectory trejGen(Pose2d c, Pose2d g, ArrayList<Translation2d> nList) {
+  private Trajectory trejGen(Pose2d c, Pose2d g) {
     trajectoryConfig = new TrajectoryConfig(1, 1);
     
     /**
      * might end up having the list of get passed in but for now we are just having
      * the point to go through be the starting point
      */
-    nList.add(new Translation2d(0,1));
-    Trajectory extrajectory = TrajectoryGenerator.generateTrajectory(c, nList, g, trajectoryConfig);   
+    
+    Trajectory extrajectory = TrajectoryGenerator.generateTrajectory(c, mInteriorPoints, g, trajectoryConfig);   
     
     return extrajectory;
   }
@@ -110,7 +107,7 @@ public class Auto extends SubsystemBase {
      * close enough to goal pose it just skips over it using if statement
      * 
      */
-  
+    
     if (checking(currentPose2d, goalPose2d, 'x')) {
       mSpeeds.vxMetersPerSecond = 0;
     }
@@ -148,12 +145,17 @@ public class Auto extends SubsystemBase {
   public Command PickAutoToRun() {
     
    // this.mList.add(new Translation2d(3.2,7.3));
-    goalPose2d = new Pose2d(7,0, new Rotation2d(0));
-    mArrayList.add(new Translation2d(3.5,0));
-   return followAuto(mGenSpeeds(trejGen(currentPose2d, goalPose2d,mArrayList),ltvController));
+    goalPose2d = new Pose2d(7,0, Rotation2d.fromDegrees(0));
+    ArrayList<Translation2d> nList = new ArrayList<>();
+    nList.add(new Translation2d(3,0));
+    setWaypoints(nList);
+   return followAuto(mGenSpeeds(trejGen(currentPose2d, goalPose2d),ltvController));
     
   
       
+  }
+  public void setWaypoints(ArrayList<Translation2d> nArrayList){
+    mInteriorPoints = nArrayList;
   }
   /**
    * 
@@ -180,43 +182,14 @@ public class Auto extends SubsystemBase {
     return false;
   }
 
-  
-
-  /**
-   * Checking our goal pose so that way it wont keep trying to drive towards a
-   * goal if its close enough to it
-   * mainly for handling and making it easier to use
-   * I dont even think its needed but just in case
-   */
-  private void goalPoseChecking() {
-    Pose2d m = drivetrainAuto.getState().Pose;
-    double x = m.getX();
-    double y = m.getY();
-
-    double dx = goalPose2d.getX();
-    double dy = goalPose2d.getY();
-    Rotation2d dR = goalPose2d.getRotation();
-    if (m.getMeasureX().isNear(goalPose2d.getMeasureX(), 0.03)) {
-
-      goalPose2d = new Pose2d(x, dy, dR);
-      dx = goalPose2d.getX();
-      dy = goalPose2d.getY();
-      dR = goalPose2d.getRotation();
-    } else if (m.getMeasureY().isNear(goalPose2d.getMeasureY(), 0.03)) {
-      goalPose2d = new Pose2d(dx, y, dR);
-      dx = goalPose2d.getX();
-      dy = goalPose2d.getY();
-      dR = goalPose2d.getRotation();
-    }
-  }
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
     updatePose();
-    if (DriverStation.isAutonomous() && autoHasBeenPicked == true) {
-      followAuto(mGenSpeeds(trajectory, ltvController));
-    }
+    // if (DriverStation.isAutonomous() && autoHasBeenPicked == true) {
+    //   followAuto(mGenSpeeds(trajectory, ltvController));
+    // }
 
   }
 }

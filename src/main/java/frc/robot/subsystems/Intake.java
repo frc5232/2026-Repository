@@ -25,7 +25,7 @@ import frc.robot.Constants;
 public class Intake extends SubsystemBase {
   /** Creates a new Intake. */
   
-  
+  private double goalPositionToTarget;
   public DutyCycleEncoder absoluteEncoder;
   private MotionMagicExpoVoltage mRequest = new MotionMagicExpoVoltage(0);
   private DutyCycleOut mCycleOut = new DutyCycleOut(0);
@@ -33,14 +33,13 @@ public class Intake extends SubsystemBase {
   private TalonFX spinningMotor;
   private double encoderConstant;
   private double encoderDownPos;
-  private double encoderPosition;
   private Trigger startSpinning;
-  
+  private Consumer<Boolean> mConsumer;
   public Intake() {
 
-    moveToFloorTalonFX = new TalonFX(8);
+    moveToFloorTalonFX = new TalonFX(Constants.talonIntakeCon.INTAKE_MOTOR_ID);
 
-    absoluteEncoder = new DutyCycleEncoder(0);
+    absoluteEncoder = new DutyCycleEncoder(Constants.talonIntakeCon.ENCODER_ID_CONSTANT);
 
     moveToFloorTalonFX.getConfigurator().apply(Constants.talonIntakeCon.INTAKE_MOTOR_CONFIG);
 
@@ -55,11 +54,13 @@ public class Intake extends SubsystemBase {
     moveToFloorTalonFX.setPosition(Math.abs(absoluteEncoder.get()-0.79) * 8.57);
     //encoder total change is 0.7
     goToStartPosition();
+    goalPositionToTarget = encoderConstant;
     startSpinning = new Trigger(() -> goalPos());
 
 
   }
   public Command goToStartPosition(){
+    goalPositionToTarget = encoderConstant;
     return new InstantCommand(()->moveToFloorTalonFX.setControl(new MotionMagicExpoVoltage(0.3)));
   }
   /**
@@ -70,33 +71,60 @@ public class Intake extends SubsystemBase {
    * 
    * 
    */
+
+   /**
+    * 
+    * @return A command in parallel to run our motors
+    */
   public Command intakeDownCommand() {
     /*
      * Test deadline v Parrellel
      */
+    goalPositionToTarget = encoderDownPos;
     return Commands.parallel(movingMotor(90), spinMotor(1));
   }
-
+  /**
+   * parallel commands to run until they are both done
+   * @return A command
+   */
   public Command intakeUpCommand() {
     return Commands.parallel(spinMotor(0), movingMotor(-90));
   
   }
-
+  /**
+   * 
+   * @param dutyCycleAmount our duty cycle amount we want the motor spinning by (Between 1 and -1)
+   * @return A Instant Command to spin the motor
+   */
   private Command spinMotor(double dutyCycleAmount) {
     return new InstantCommand(() -> spinningMotor.setControl((mCycleOut.withOutput(dutyCycleAmount))));
   }
-
+  /**
+   * 
+   * @param goalAmount The goal amount in degrees you want the motor to move by
+   * @return A functional command to move the motor with
+   */
   private Command movingMotor(double goalAmount) {
-    
-    
+     mConsumer.accept(goalPos());
     return new FunctionalCommand(
-        () -> moveToFloorTalonFX.setControl(mRequest.withPosition(Units.rotationsToDegrees(-goalAmount))), () -> {
-        },null, startSpinning, this);
+        () -> moveToFloorTalonFX.setControl(mRequest.withPosition(Units.rotationsToDegrees(goalAmount))), ()->holdIntakePos(goalAmount),
+        mConsumer, startSpinning, this);
 
   }
-
-  public boolean goalPos() {
-    if (absoluteEncoder.get() >= 0.3 && absoluteEncoder.get() <= 0.33) {
+  /**
+   * 
+   * @param goalPos Our position in degrees we want it to be at
+   * @return Command ot run with motoion magic expo voltage to target
+   */
+  public Command holdIntakePos(double goalPos){
+   return Commands.run(()->moveToFloorTalonFX.setControl(mRequest.withPosition(Units.degreesToRotations(goalPos))), this);
+  }
+  /**
+   * 
+   * @return A Boolean to say if were near our goal pos
+   */
+  public Boolean goalPos() {
+    if (absoluteEncoder.get() >= goalPositionToTarget && absoluteEncoder.get() <= goalPositionToTarget + 0.03) {
       return true;
     } else {
       return false;
