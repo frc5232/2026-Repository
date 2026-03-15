@@ -88,7 +88,7 @@ public class Vision extends SubsystemBase {
         dx += estimatedRobotPose.get().estimatedPose.getX();
         dy += estimatedRobotPose.get().estimatedPose.getY();
         dz += estimatedRobotPose.get().estimatedPose.getZ();
-        dR += estimatedRobotPose.get().estimatedPose.getRotation().getAngle();
+        
         size += 1;
       }
 
@@ -100,7 +100,7 @@ public class Vision extends SubsystemBase {
     // cameras and checking for anomilies
     if (size != 0) {
       if (checkPoseForAnomilies(
-          new Pose3d(dx / size, dy / size, dz / size, new Rotation3d(new Rotation2d(dR / size))))) {
+          new Pose3d(dx / size, dy / size, dz / size,drivetrain.getRotation3d()))) {
 
         lastPose3d = currentPose3d;
         drivetrain.addVisionMeasurement(currentPose3d.toPose2d(), camera.getLatestResult().getTimestampSeconds());

@@ -21,12 +21,16 @@ import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Auto extends SubsystemBase {
   /** Creates a new Auto. */
+  private double xSpeed = 0;
+  private double ySpeed = 0;
+  private double rSpeed = 0;
   private ArrayList<Translation2d> mInteriorPoints;
   private boolean firstRunOfTraj = false;
   private Pose2d goalPose2d;
@@ -38,16 +42,16 @@ public class Auto extends SubsystemBase {
   private ChassisSpeeds chassisSpeeds;
   public List<Translation2d> mList;
   public ArrayList<Translation2d> mArrayList = new ArrayList<>();
+
   public Auto(CommandSwerveDrivetrain drivetrain, SwerveRequest.FieldCentric mCentric) {
     drivetrainAuto = drivetrain;
     drive = mCentric;
     currentPose2d = drivetrainAuto.getState().Pose;
 
-    
     // we can tune this some more when we are at arc field
     // this is for path of the auto from start to where we want to be
-    ltvController =new LTVUnicycleController(VecBuilder.fill(0.0625, 0.125, 2.0), VecBuilder.fill(1.0, 2.0), 0.02, 9);
-    
+    ltvController = new LTVUnicycleController(VecBuilder.fill(0.0625, 0.125, 2.0), VecBuilder.fill(1.0, 2.0), 0.02, 9);
+
   }
 
   /**
@@ -64,14 +68,14 @@ public class Auto extends SubsystemBase {
    */
   private Trajectory trejGen(Pose2d c, Pose2d g) {
     trajectoryConfig = new TrajectoryConfig(1, 1);
-    
+
     /**
      * might end up having the list of get passed in but for now we are just having
      * the point to go through be the starting point
      */
-    
-    Trajectory extrajectory = TrajectoryGenerator.generateTrajectory(c, mInteriorPoints, g, trajectoryConfig);   
-    
+    SmartDashboard.putNumber("interior waypoint y", mInteriorPoints.get(0).getX());
+    Trajectory extrajectory = TrajectoryGenerator.generateTrajectory(c, mInteriorPoints, g, trajectoryConfig);
+
     return extrajectory;
   }
 
@@ -84,12 +88,12 @@ public class Auto extends SubsystemBase {
    */
   private ChassisSpeeds mGenSpeeds(Trajectory tj, LTVUnicycleController cont) {
     if (this.firstRunOfTraj) {
-      chassisSpeeds = cont.calculate(currentPose2d,tj.sample(Timer.getFPGATimestamp()));
-      
+      chassisSpeeds = cont.calculate(currentPose2d, tj.sample(Timer.getFPGATimestamp()));
+
       return chassisSpeeds;
     }
     chassisSpeeds = cont.calculate(currentPose2d, tj.sample(0));
-    
+
     this.firstRunOfTraj = true;
     return chassisSpeeds;
   }
@@ -98,7 +102,7 @@ public class Auto extends SubsystemBase {
    * 
    * @param mSpeeds our chassis speeds getting passed into the drivetrain
    */
-  
+
   private Command followAuto(ChassisSpeeds mSpeeds) {
     /**
      * Making chassisSpeeds using our controller and how far we are in the
@@ -108,26 +112,23 @@ public class Auto extends SubsystemBase {
      * close enough to goal pose it just skips over it using if statement
      * 
      */
-    
+    xSpeed = mSpeeds.vxMetersPerSecond;
+    ySpeed = mSpeeds.vyMetersPerSecond;
+    rSpeed = mSpeeds.omegaRadiansPerSecond;
     if (checking(currentPose2d, goalPose2d, 'x')) {
-      mSpeeds.vxMetersPerSecond = 0;
+
+      xSpeed = 0;
     }
     if (checking(currentPose2d, goalPose2d, 'y')) {
-      mSpeeds.vyMetersPerSecond = 0;
+      ySpeed = 0;
     }
     if (checking(currentPose2d, goalPose2d, 'r')) {
-      mSpeeds.omegaRadiansPerSecond = 0;
+      rSpeed = 0;
     }
-    
-    return new SequentialCommandGroup(new InstantCommand(
-        () -> drivetrainAuto.applyRequest(() -> drive.withVelocityX(mSpeeds.vxMetersPerSecond)))
-        .alongWith(
-            new InstantCommand(() -> drivetrainAuto.applyRequest(() -> drive.withVelocityY(mSpeeds.vyMetersPerSecond)))
-                .alongWith(new InstantCommand(
-                    () -> drivetrainAuto.applyRequest(() -> drive.withRotationalRate(mSpeeds.omegaRadiansPerSecond))))
-        ));
-                    
-    
+
+    return Commands.repeatingSequence(drivetrainAuto.applyRequest(() -> drive.withVelocityX(-xSpeed)),
+        drivetrainAuto.applyRequest(() -> drive.withVelocityY(-ySpeed)),
+        drivetrainAuto.applyRequest(() -> drive.withRotationalRate(-rSpeed)));
 
   }
 
@@ -144,20 +145,20 @@ public class Auto extends SubsystemBase {
    */
 
   public Command PickAutoToRun() {
-    
-   // this.mList.add(new Translation2d(3.2,7.3));
-    goalPose2d = new Pose2d(7,0, Rotation2d.fromDegrees(0));
+
+    // this.mList.add(new Translation2d(3.2,7.3));
+    goalPose2d = new Pose2d(8, 6, Rotation2d.fromDegrees(0));
     ArrayList<Translation2d> nList = new ArrayList<>();
-    nList.add(new Translation2d(3,0));
+    nList.add(new Translation2d(4, 4));
     setWaypoints(nList);
-   return followAuto(mGenSpeeds(trejGen(currentPose2d, goalPose2d),ltvController));
-    
-  
-      
+    return followAuto(mGenSpeeds(trejGen(currentPose2d, goalPose2d), ltvController));
+
   }
-  public void setWaypoints(ArrayList<Translation2d> nArrayList){
+
+  public void setWaypoints(ArrayList<Translation2d> nArrayList) {
     mInteriorPoints = nArrayList;
   }
+
   /**
    * 
    * @param c           - the current pose
@@ -167,31 +168,31 @@ public class Auto extends SubsystemBase {
    * @return returns a bool which decides whether or whether not to stop
    */
   private Boolean checking(Pose2d c, Pose2d g, char typeToCheck) {
-    if (typeToCheck == 'x') {
-      if (c.getX() > g.getX() - 0.25) {
+    if (Character.compare(typeToCheck, 'x') == 0) {
+
+      if (Math.abs(c.getX()) > Math.abs(g.getX()) + 0.25) {
+
         return true;
       }
-    } else if (typeToCheck == 'y') {
-      if (c.getY() > g.getY() - 0.25) {
+    } else if (Character.compare(typeToCheck, 'y') == 0) {
+      if (Math.abs(c.getY()) > Math.abs(g.getY()) + 0.25) {
         return true;
       }
-    } else if (typeToCheck == 'r') {
-      if (c.getRotation().getDegrees() > g.getRotation().getDegrees() - 3) {
+    } else if (Character.compare(typeToCheck, 'r') == 0) {
+      if (Math.abs(c.getRotation().getDegrees()) > Math.abs(g.getRotation().getDegrees()) + 3) {
         return true;
       }
     }
     return false;
   }
 
-
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
     updatePose();
     // if (DriverStation.isAutonomous() && autoHasBeenPicked == true) {
-    //   followAuto(mGenSpeeds(trajectory, ltvController));
+    // followAuto(mGenSpeeds(trajectory, ltvController));
     // }
-    SmartDashboard.putNumber("testing", drivetrainAuto.getState().Speeds.vxMetersPerSecond);
+   // SmartDashboard.putNumber("testing", drivetrainAuto.getState().Speeds.vxMetersPerSecond);
   }
 }
-
