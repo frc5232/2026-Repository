@@ -4,37 +4,24 @@
 
 package frc.robot.subsystems;
 
-import java.lang.constant.Constable;
 import java.util.ArrayList;
 import java.util.Optional;
 
-import org.opencv.photo.Photo;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
-import org.photonvision.PhotonUtils;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class Vision extends SubsystemBase {
-  /** Creates a new Auto. */
-  // fasle = left, true = right
-  private boolean headingDir;
-  private boolean pastdir;
-  private double direction;
+
   private boolean calledBefore = false;
   private Pose3d currentPose3d;
   private PhotonCamera camera;
@@ -51,25 +38,21 @@ public class Vision extends SubsystemBase {
   private PhotonPoseEstimator estimator;
   private Pose3d lastPose3d;
   private CommandSwerveDrivetrain drivetrain;
-  private ArrayList<PhotonPoseEstimator> photonPoseEstimators;
+  private ArrayList<PhotonPoseEstimator> photonPoseEstimators =  new ArrayList<>();
 
   public Vision(CommandSwerveDrivetrain mCommandSwerveDrivetrain) {
     this.drivetrain = mCommandSwerveDrivetrain;
 
     camera = new PhotonCamera("frontFacingCamera");
-    // camera2 = new PhotonCamera("leftFacingCamera");
-    // camera3 = new PhotonCamera("BackFacingCamera");
+
     listOfCameras.add(0, camera);
-    // listOfCameras.add(1, camera2);
-    // listOfCameras.add(1,camera3);
+
     robotToCam.add(0, camera1Pos);
-    // robotToCam.add(1, camera2Pos);
-    // robotToCam.add(1,camera3Pos);
+
     camerasHaveTargets.add(0, false);
-    // camerasHaveTargets.add(1,false);
-    // camerasHaveTargets.add(2,false);
+
     photonPoseEstimators.add(new PhotonPoseEstimator(aprilTagFieldLayouts, camera1Pos));
-    listOfCameras.get(0).setDriverMode(true);
+
   }
 
   /**
@@ -96,17 +79,7 @@ public class Vision extends SubsystemBase {
         // checks if our fidlical id is present
         // doesnt currently do anything so im wondering if its needed or not for
         // anything
-        // if
-        // (aprilTagFieldLayouts.getTagPose(m.getLatestResult().getBestTarget().getFiducialId()).isPresent())
-        // {
-        // // updates our current pose with the camera transformation,pose of the id we
-        // // see,and our camera position on the robot
-        // currentPose3d = PhotonUtils.estimateFieldToRobotAprilTag(
-        // m.getLatestResult().getBestTarget().getBestCameraToTarget(),
-        // aprilTagFieldLayouts.getTagPose(m.getLatestResult().getBestTarget().getFiducialId()).get(),
-        // robotToCam.get(i));
-        // }
-        // sets ouir
+
         estimatedRobotPose = estimator.estimateCoprocMultiTagPose(m.getLatestResult());
         if (estimatedRobotPose.isEmpty()) {
           estimatedRobotPose = estimator.estimateLowestAmbiguityPose(m.getLatestResult());
@@ -115,29 +88,28 @@ public class Vision extends SubsystemBase {
         dx += estimatedRobotPose.get().estimatedPose.getX();
         dy += estimatedRobotPose.get().estimatedPose.getY();
         dz += estimatedRobotPose.get().estimatedPose.getZ();
-        dR += estimatedRobotPose.get().estimatedPose.getRotation().getAngle();
+        
         size += 1;
       }
 
     }
-    
+
     // mCommandSwerveDrivetrain.addVisionMeasurement(currentPose3d.toPose2d(),mEstimatedRobotPose.get().timestampSeconds);
 
     // updating our current pose with our total values then dividing by amount of
     // cameras and checking for anomilies
     if (size != 0) {
       if (checkPoseForAnomilies(
-          new Pose3d(dx / size, dy / size, dz / size, new Rotation3d(new Rotation2d(dR / size))))) {
-        // then here we will pass into vision
+          new Pose3d(dx / size, dy / size, dz / size,drivetrain.getRotation3d()))) {
+
         lastPose3d = currentPose3d;
-        drivetrain.addVisionMeasurement(currentPose3d.toPose2d(), Timer.getFPGATimestamp());
+        drivetrain.addVisionMeasurement(currentPose3d.toPose2d(), camera.getLatestResult().getTimestampSeconds());
+      } else {
+        drivetrain.addVisionMeasurement(lastPose3d.toPose2d(), camera.getLatestResult().getTimestampSeconds());
       }
-      // then here we will pass into vision
+
     }
   }
-
-
-
 
   /**
    * 
@@ -146,7 +118,7 @@ public class Vision extends SubsystemBase {
    *          target
    *          if it doesnt have a target sets the other Array list to False
    */
-  private void checkallCameras(ArrayList<PhotonCamera> x) {
+  private void checkAllCameras(ArrayList<PhotonCamera> x) {
     // iterating through the cameras and checking if they have targets if they do
     // updating it to true else make it false
     for (int i = 0; i < x.size(); i++) {
@@ -158,26 +130,7 @@ public class Vision extends SubsystemBase {
     }
   }
 
-  private boolean yawFixer(Pose3d pp) {
-    // this is to fix the yaw and it was just slightly off and annoying hunter
-    if (direction == 0) {
-      direction = pp.getRotation().getMeasureZ().compareTo(lastPose3d.getRotation().getMeasureZ());
-    } else {
-      double dd = pp.getRotation().getMeasureZ().compareTo(lastPose3d.getRotation().getMeasureZ());
-      if (dd > direction) {
-        headingDir = false;
-      } else if (dd <= direction) {
-        headingDir = true;
-      }
-      if (pastdir == headingDir) {
-        return true;
-      } else if (pp.getRotation().getMeasureZ().isNear(lastPose3d.getRotation().getMeasureZ(), 0.12)) {
-        return true;
-      }
-
-    }
-    return false;
-  }
+  
 
   /**
    * 
@@ -202,7 +155,7 @@ public class Vision extends SubsystemBase {
      */
     if (!p.getMeasureX().isNear(lastPose3d.getMeasureX(), 0.1) ||
         !p.getMeasureY().isNear(lastPose3d.getMeasureY(), 0.1)
-        || !yawFixer(p)) {
+        ) {
       return false;
     } else {
       return true;
@@ -212,8 +165,8 @@ public class Vision extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    checkallCameras(listOfCameras);
+    checkAllCameras(listOfCameras);
     calculatePose();
-    
+
   }
 }

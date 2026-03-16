@@ -14,7 +14,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.Constants;
 
 public class Shooting extends SubsystemBase {
@@ -34,9 +33,17 @@ public class Shooting extends SubsystemBase {
     lowerShooter.setControl(new Follower(Constants.shooterMotorCon.upperShooter, MotorAlignmentValue.Opposed));
 
   }
+  /**
+   * A command to start shooting our balls
+   * @return a sequential command group with our commands
+   */
   private Command shootOut(){
     return new SequentialCommandGroup(new InstantCommand(()-> upperShooter.setControl(mCycleOut.withOutput(1))).until(()->upperShooter.getDutyCycle().getValueAsDouble() >= 0.8).andThen(new InstantCommand(()->indexShooter.setControl(mCycleOut.withOutput(-1)))));
   }
+  /**
+   * A command to stop shooting our balls
+   * @return a sequential command group with our commands
+   */
   private Command stopShooting(){
     return new SequentialCommandGroup(new InstantCommand(()->upperShooter.setControl(mCycleOut.withOutput(0))).alongWith(new InstantCommand(()->indexShooter.setControl(mCycleOut.withOutput(0)))));
   }

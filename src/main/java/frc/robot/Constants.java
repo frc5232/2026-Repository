@@ -28,32 +28,21 @@ public final class Constants {
     public static final int kDriverControllerPort = 0;
 
   }
-  public class climberConstants{
-    public static final TalonFXConfiguration CLIMB_MOTOR_CONFIG = new TalonFXConfiguration();
-    static{
-      CLIMB_MOTOR_CONFIG.Slot0.kP = 20;
-    }
-  }
+  
   public class visionConstant{
     public static final Transform3d camera1Pos = new Transform3d(new Translation3d(0.07, 0.48, -0.1),
       new Rotation3d(0, 180, 0));
-  private static final Transform3d camera2Pos = new Transform3d(new Translation3d(0.45, 0.12, -0.1),
-      new Rotation3d(0, 180, 90));
-  private static final Transform3d camera3Pos = new Transform3d(new Translation3d(0.14, 0. - 0.21, -0.1),
-      new Rotation3d(0, 180, 180));
-  private static final Transform3d camera4Pos = new Transform3d(new Translation3d(-0.25, 0.15, -0.1),
-      new Rotation3d(0, 180, 270));
   }
   public class talonIntakeCon {
-    public static double ENCODER_DOWN_POSITION = 0.32;
-    public static double ENCODER_STARTING_POSITION = 0.93;
+    public static int ENCODER_ID_CONSTANT = 0;
+    
+    public static double ENCODER_DOWN_POSITION = 0.10;
+    public static double ENCODER_STARTING_POSITION = 0.79;
     public static int INTAKE_MOTOR_ID = 8;
     public static final TalonFXConfiguration SPIN_MOTOR_CONFIG = new TalonFXConfiguration();
     public static int SPIN_MOTOR_ID = 55;
     public static final TalonFXConfiguration INTAKE_MOTOR_CONFIG = new TalonFXConfiguration();
-    private static final double gearRatioForIntake = 0.05;
-    private static final int ticksPerRevolution = 40960;
-    public static final double countsPerDegree  = gearRatioForIntake * ticksPerRevolution/360;
+    
     // intake tooth is 16
     
     static {
