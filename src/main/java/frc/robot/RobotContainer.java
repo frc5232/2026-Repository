@@ -41,12 +41,12 @@ public class RobotContainer {
 
     public final CommandSwerveDrivetrain drivetrainSubsystem = Comp1TunerConstatnts.createDrivetrain();
 
-    private final Vision visionSubsystem = new Vision(drivetrainSubsystem);
-     private final Auto autoSubsystem = new Auto(drivetrainSubsystem,drive);
-   private final Aiming aimingSubsystem = new Aiming(drivetrainSubsystem, drive);
-  // private final Intake intakeSubsystem = new Intake();;
+    //private final Vision visionSubsystem = new Vision(drivetrainSubsystem);
+     //private final Auto autoSubsystem = new Auto(drivetrainSubsystem,drive);
+   //private final Aiming aimingSubsystem = new Aiming(drivetrainSubsystem, drive);
+  private final Intake intakeSubsystem = new Intake();;
 
-   private final Shooting shooterSubsystem = new Shooting();
+   //private final Shooting shooterSubsystem = new Shooting();
      
 
     public RobotContainer() {
@@ -108,14 +108,14 @@ public class RobotContainer {
 
         
         drivetrainSubsystem.registerTelemetry(logger::telemeterize);
-      //  joystick.pov(0).onTrue(intakeSubsystem.intakeDownCommand());
-        //joystick.pov(90).onTrue(intakeSubsystem.intakeUpCommand());
+        joystick.pov(0).onTrue(intakeSubsystem.intakeDownCommand());
+        joystick.pov(90).onTrue(intakeSubsystem.intakeUpCommand());
     }
 
     public Command getAutonomousCommand() {
         //return new SequentialCommandGroup(drivetrainSubsystem.applyRequest(()-> drive.withVelocityX(4)).withTimeout(1)).withTimeout(1).andThen(drivetrainSubsystem.applyRequest(()->drive.withVelocityY(-5)).withTimeout(2));
-        return autoSubsystem.PickAutoToRun();
-      // return null;
+        //return autoSubsystem.PickAutoToRun();
+         return null;
     }
 
 }
