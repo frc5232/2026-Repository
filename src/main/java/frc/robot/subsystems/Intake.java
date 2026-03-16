@@ -52,7 +52,7 @@ public class Intake extends SubsystemBase {
 
     encoderDownPos = Constants.talonIntakeCon.ENCODER_DOWN_POSITION;
 
-    moveToFloorTalonFX.setPosition(Math.abs(absoluteEncoder.get()-encoderConstant) * 8.57);
+    moveToFloorTalonFX.setPosition(Math.abs(absoluteEncoder.get()-encoderConstant) * 0.25);
     //encoder total change is 0.7
     goToStartPosition();
     goalPositionToTarget = encoderConstant;
@@ -61,7 +61,8 @@ public class Intake extends SubsystemBase {
     mConsumer = positionValue -> {
     
      if(positionValue){
-        holdPosition();}
+        //holdPosition();
+     }
         else{
 
         }
@@ -71,7 +72,7 @@ public class Intake extends SubsystemBase {
 
   }
   public Command goToStartPosition(){
-    goalPositionToTarget = encoderConstant;
+    this.goalPositionToTarget = encoderConstant;
     return new InstantCommand(()->moveToFloorTalonFX.setControl(new MotionMagicExpoVoltage(0.3)));
   }
  
@@ -95,15 +96,16 @@ public class Intake extends SubsystemBase {
     /*
      * Test deadline v Parrellel
      */
-    goalPositionToTarget = encoderDownPos;
-    return Commands.parallel(movingMotor(5), spinMotor(0.32));
+    this.goalPositionToTarget = encoderDownPos;
+    return Commands.parallel(movingMotor(5.7), spinMotor(0.32));
   }
   /**
    * parallel commands to run until they are both done
    * @return A command
    */
   public Command intakeUpCommand() {
-    return Commands.parallel(spinMotor(0), movingMotor(-5));
+    this.goalPositionToTarget = encoderConstant;
+    return Commands.parallel(spinMotor(moveToFloorTalonFX.getPosition().getValueAsDouble()), movingMotor(0));
   
   }
   /**
@@ -122,9 +124,10 @@ public class Intake extends SubsystemBase {
   private Command movingMotor(double goalAmount) {
     
     return new FunctionalCommand(
+      ()->{},
         () -> 
-        moveToFloorTalonFX.setControl(mRequest.withPosition(Units.rotationsToDegrees(goalAmount))),
-        ()->{},
+        moveToFloorTalonFX.setControl(mRequest.withPosition(goalAmount)),
+        
         mConsumer,
         startSpinning, 
         this);

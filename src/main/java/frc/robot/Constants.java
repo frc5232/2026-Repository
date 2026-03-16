@@ -36,8 +36,8 @@ public final class Constants {
   public class talonIntakeCon {
     public static int ENCODER_ID_CONSTANT = 0;
     
-    public static double ENCODER_DOWN_POSITION = 0.18;
-    public static double ENCODER_STARTING_POSITION = 0.89;
+    public static double ENCODER_DOWN_POSITION = 0.99;
+    public static double ENCODER_STARTING_POSITION = 0.67;
     public static int INTAKE_MOTOR_ID = 8;
     public static final TalonFXConfiguration SPIN_MOTOR_CONFIG = new TalonFXConfiguration();
     public static int SPIN_MOTOR_ID = 55;
