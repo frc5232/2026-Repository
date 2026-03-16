@@ -76,7 +76,7 @@ public class Intake extends SubsystemBase {
   }
  
   public Command holdPosition(){
-   return Commands.run(()->moveToFloorTalonFX.setControl(mRequest.withPosition(Units.degreesToRotations(goalPositionToTarget))),this).onlyWhile(()->goalPos() == false);
+   return Commands.run(()->moveToFloorTalonFX.setControl(mRequest.withPosition(Units.degreesToRotations(goalPositionToTarget))),this);
   }
   /**
    * Position at bottom = 0.31 encoder
