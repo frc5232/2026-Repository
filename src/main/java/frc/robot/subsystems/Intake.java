@@ -35,6 +35,7 @@ public class Intake extends SubsystemBase {
   private double encoderDownPos;
   private Trigger startSpinning;
   private Consumer<Boolean> mConsumer;
+  private boolean positionValue;
   public Intake() {
 
     moveToFloorTalonFX = new TalonFX(Constants.talonIntakeCon.INTAKE_MOTOR_ID);
@@ -51,17 +52,32 @@ public class Intake extends SubsystemBase {
 
     encoderDownPos = Constants.talonIntakeCon.ENCODER_DOWN_POSITION;
 
-    moveToFloorTalonFX.setPosition(Math.abs(absoluteEncoder.get()-0.79) * 8.57);
+    moveToFloorTalonFX.setPosition(Math.abs(absoluteEncoder.get()-encoderConstant) * 0.25);
     //encoder total change is 0.7
     goToStartPosition();
     goalPositionToTarget = encoderConstant;
     startSpinning = new Trigger(() -> goalPos());
+    positionValue = goalPos() ? true : false;
+    mConsumer = positionValue -> {
+    
+     if(positionValue){
+        //holdPosition();
+     }
+        else{
 
+        }
+      
+      };
+        
 
   }
   public Command goToStartPosition(){
-    goalPositionToTarget = encoderConstant;
+    this.goalPositionToTarget = encoderConstant;
     return new InstantCommand(()->moveToFloorTalonFX.setControl(new MotionMagicExpoVoltage(0.3)));
+  }
+ 
+  public Command holdPosition(){
+   return Commands.run(()->moveToFloorTalonFX.setControl(mRequest.withPosition(Units.degreesToRotations(goalPositionToTarget))),this);
   }
   /**
    * Position at bottom = 0.31 encoder
@@ -80,15 +96,16 @@ public class Intake extends SubsystemBase {
     /*
      * Test deadline v Parrellel
      */
-    goalPositionToTarget = encoderDownPos;
-    return Commands.parallel(movingMotor(90), spinMotor(1));
+    this.goalPositionToTarget = encoderDownPos;
+    return Commands.parallel(movingMotor(5.7), spinMotor(0.32));
   }
   /**
    * parallel commands to run until they are both done
    * @return A command
    */
   public Command intakeUpCommand() {
-    return Commands.parallel(spinMotor(0), movingMotor(-90));
+    this.goalPositionToTarget = encoderConstant;
+    return Commands.parallel(spinMotor(moveToFloorTalonFX.getPosition().getValueAsDouble()), movingMotor(0));
   
   }
   /**
@@ -105,26 +122,23 @@ public class Intake extends SubsystemBase {
    * @return A functional command to move the motor with
    */
   private Command movingMotor(double goalAmount) {
-     mConsumer.accept(goalPos());
+    
     return new FunctionalCommand(
-        () -> moveToFloorTalonFX.setControl(mRequest.withPosition(Units.rotationsToDegrees(goalAmount))), ()->holdIntakePos(goalAmount),
-        mConsumer, startSpinning, this);
+      ()->{},
+        () -> 
+        moveToFloorTalonFX.setControl(mRequest.withPosition(goalAmount)),
+        
+        mConsumer,
+        startSpinning, 
+        this);
 
-  }
-  /**
-   * 
-   * @param goalPos Our position in degrees we want it to be at
-   * @return Command ot run with motoion magic expo voltage to target
-   */
-  public Command holdIntakePos(double goalPos){
-   return Commands.run(()->moveToFloorTalonFX.setControl(mRequest.withPosition(Units.degreesToRotations(goalPos))), this);
   }
   /**
    * 
    * @return A Boolean to say if were near our goal pos
    */
   public Boolean goalPos() {
-    if (absoluteEncoder.get() >= goalPositionToTarget && absoluteEncoder.get() <= goalPositionToTarget + 0.03) {
+    if (absoluteEncoder.get() <= goalPositionToTarget && absoluteEncoder.get() >= goalPositionToTarget - 0.03) {
       return true;
     } else {
       return false;
