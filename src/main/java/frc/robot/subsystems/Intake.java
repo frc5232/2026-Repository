@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
@@ -22,7 +23,7 @@ import frc.robot.Constants;
 public class Intake extends SubsystemBase {
   /** Creates a new Intake. */
 
-  private double goalPositionToTarget;
+  double goalPositionToTarget = 0;
   public DutyCycleEncoder absoluteEncoder;
   private MotionMagicExpoVoltage mRequest = new MotionMagicExpoVoltage(0);
   private DutyCycleOut mCycleOut = new DutyCycleOut(0);
@@ -51,11 +52,16 @@ public class Intake extends SubsystemBase {
     moveToFloorTalonFX.setPosition(Math.abs(absoluteEncoder.get() - encoderConstant) * 0.25);
     // encoder total change is 0.7
 
-    goalPositionToTarget = encoderConstant;
+  
     startSpinning = new Trigger(() -> goalPos());
 
   }
-
+  private void setGoal(double x){
+    goalPositionToTarget = x;
+  }
+  private double getGoal(){
+    return goalPositionToTarget;
+  }
   /**
    * Position at bottom = 0.31 encoder
    * Position at middle = 0.62 encoder
@@ -64,7 +70,13 @@ public class Intake extends SubsystemBase {
    * 
    * 
    */
-
+  public Command intakeDown(){
+    
+    return new SequentialCommandGroup(new InstantCommand (()->setGoal(encoderDownPos)).andThen(intakeDownCommand()));
+  }
+  public Command intakeUp(){
+    return new SequentialCommandGroup(new InstantCommand (()->setGoal(encoderConstant)).andThen(intakeUpCommand()));
+  }
   /**
    * 
    * @return A command in parallel to run our motors
@@ -73,8 +85,8 @@ public class Intake extends SubsystemBase {
     /*
      * Test deadline v Parrellel
      */
-    this.goalPositionToTarget = encoderDownPos;
-    return Commands.sequence(movingMotor(90), spinMotor(0.32));
+   
+    return Commands.parallel(movingMotor(81), spinMotor(0.32));
   }
 
   /**
@@ -83,8 +95,8 @@ public class Intake extends SubsystemBase {
    * @return A command
    */
   public Command intakeUpCommand() {
-    this.goalPositionToTarget = encoderConstant;
-    return Commands.sequence(movingMotor(0), spinMotor(0));
+    // setGoal(encoderConstant);
+    return Commands.parallel(movingMotor(0), spinMotor(0));
 
   }
 
@@ -104,14 +116,13 @@ public class Intake extends SubsystemBase {
    * @return A functional command to move the motor with
    */
   private Command movingMotor(double goalAmount) {
-
+    
     return new FunctionalCommand(
 
-        () -> moveToFloorTalonFX.setControl(mRequest.withPosition(Units.degreesToRotations(goalAmount))),
-        () -> {
-        },
+        () -> moveToFloorTalonFX.setControl(mRequest.withPosition(Units.degreesToRotations(goalAmount) * 26.64)),
+        () -> {},
 
-        startSpinning -> moveToFloorTalonFX.stopMotor(),
+        startSpinning -> {if(startSpinning ==true){moveToFloorTalonFX.stopMotor();}},
         () -> goalPos(),
         this);
 
@@ -143,7 +154,7 @@ public class Intake extends SubsystemBase {
    */
   public boolean goalPos() {
 
-    if (isNear(goalPositionToTarget, absoluteEncoder.get(), 0.03)) {
+    if (isNear(getGoal(), absoluteEncoder.get(), 0.03)) {
       return true;
     }
     return false;
@@ -160,7 +171,7 @@ public class Intake extends SubsystemBase {
     SmartDashboard.putNumber("encoder value", absoluteEncoder.get());
     SmartDashboard.putNumber("Position of Motor", moveToFloorTalonFX.getPosition().getValueAsDouble());
     SmartDashboard.putNumber("Spin motor speed", spinningMotor.getDutyCycle().getValueAsDouble());
-
+    SmartDashboard.putNumber("goal target", getGoal());
   }
 
 }

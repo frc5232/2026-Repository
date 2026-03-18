@@ -42,7 +42,7 @@ public class Vision extends SubsystemBase {
     this.drivetrain = mCommandSwerveDrivetrain;
 
     camera = new PhotonCamera("frontFacingCamera");
-
+      
     listOfCameras.add(0, camera);
 
     robotToCam.add(0, camera1Pos);
