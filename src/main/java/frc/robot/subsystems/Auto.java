@@ -115,6 +115,7 @@ public class Auto extends SubsystemBase {
     xSpeed = mSpeeds.vxMetersPerSecond;
     ySpeed = mSpeeds.vyMetersPerSecond;
     rSpeed = mSpeeds.omegaRadiansPerSecond;
+   
     if (checking(currentPose2d, goalPose2d, 'x')) {
 
       xSpeed = 0;

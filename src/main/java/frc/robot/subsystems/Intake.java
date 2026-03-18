@@ -54,31 +54,15 @@ public class Intake extends SubsystemBase {
 
     moveToFloorTalonFX.setPosition(Math.abs(absoluteEncoder.get()-encoderConstant) * 0.25);
     //encoder total change is 0.7
-    goToStartPosition();
+   
     goalPositionToTarget = encoderConstant;
     startSpinning = new Trigger(() -> goalPos());
-    positionValue = goalPos() ? true : false;
-    mConsumer = positionValue -> {
     
-     if(positionValue){
-        //holdPosition();
-     }
-        else{
-
-        }
-      
-      };
+    
         
 
   }
-  public Command goToStartPosition(){
-    this.goalPositionToTarget = encoderConstant;
-    return new InstantCommand(()->moveToFloorTalonFX.setControl(new MotionMagicExpoVoltage(0.3)));
-  }
- 
-  public Command holdPosition(){
-   return Commands.run(()->moveToFloorTalonFX.setControl(mRequest.withPosition(Units.degreesToRotations(goalPositionToTarget))),this);
-  }
+  
   /**
    * Position at bottom = 0.31 encoder
    * Position at middle = 0.62 encoder
@@ -97,7 +81,7 @@ public class Intake extends SubsystemBase {
      * Test deadline v Parrellel
      */
     this.goalPositionToTarget = encoderDownPos;
-    return Commands.parallel(movingMotor(5.7), spinMotor(0.32));
+    return Commands.sequence(movingMotor(encoderDownPos),spinMotor(0.32));
   }
   /**
    * parallel commands to run until they are both done
@@ -105,7 +89,7 @@ public class Intake extends SubsystemBase {
    */
   public Command intakeUpCommand() {
     this.goalPositionToTarget = encoderConstant;
-    return Commands.parallel(spinMotor(moveToFloorTalonFX.getPosition().getValueAsDouble()), movingMotor(0));
+    return Commands.sequence(movingMotor(encoderConstant),spinMotor(0));
   
   }
   /**
@@ -124,27 +108,52 @@ public class Intake extends SubsystemBase {
   private Command movingMotor(double goalAmount) {
     
     return new FunctionalCommand(
-      ()->{},
-        () -> 
-        moveToFloorTalonFX.setControl(mRequest.withPosition(goalAmount)),
+      
+        () -> moveToFloorTalonFX.setControl(mRequest.withPosition(goalAmount)),
+        ()->{},
         
-        mConsumer,
-        startSpinning, 
+        startSpinning -> moveToFloorTalonFX.stopMotor(),
+        ()->goalPos(), 
         this);
 
+    // **** Try This ////////////////////////////
+
+    // return new FunctionalCommand(
+    // // OnInit
+    // () -> moveToFloorTalonFX.setControl(mRequest.withPosition(goalAmount)),
+
+    // // OnExecute
+    // () -> {},
+
+    // //OnEnd
+    // interrupted -> moveToFloorTalonFX.stopMotor(),
+
+    // // isFinished
+
+    // () -> goalPos(),
+
+    // this
+    // );  
+
+    ///////////////////////////////////////////////////////
   }
   /**
    * 
    * @return A Boolean to say if were near our goal pos
    */
-  public Boolean goalPos() {
-    if (absoluteEncoder.get() <= goalPositionToTarget && absoluteEncoder.get() >= goalPositionToTarget - 0.03) {
+  public boolean goalPos() {
+    
+    
+    if (isNear(goalPositionToTarget, absoluteEncoder.get(), 0.03)) {
       return true;
-    } else {
-      return false;
-    }
+    } 
+    return false;
+    
   }
-
+  private boolean isNear(double valueToCheck, double checkingValue,double tolerance){
+    return Math.abs(valueToCheck - checkingValue) <= tolerance;
+    
+  }
   @Override
   public void periodic() {
     SmartDashboard.putNumber("encoder value",absoluteEncoder.get());
