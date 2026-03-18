@@ -103,7 +103,7 @@ public class RobotContainer {
         
         drivetrainSubsystem.registerTelemetry(logger::telemeterize);
         joystick.pov(0).onTrue(intakeSubsystem.intakeDown());
-        joystick.pov(90).onTrue(intakeSubsystem.intakeUpCommand());
+        joystick.pov(90).onTrue(intakeSubsystem.intakeUp());
     }
 
     public Command getAutonomousCommand() {

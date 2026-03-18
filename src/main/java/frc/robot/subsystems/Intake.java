@@ -22,9 +22,10 @@ import frc.robot.Constants;
 
 public class Intake extends SubsystemBase {
   /** Creates a new Intake. */
-
-  double goalPositionToTarget = 0;
-  public DutyCycleEncoder absoluteEncoder;
+  // switched this to private right before pushing if it doesnt work next time
+  // thats why
+  private double goalPositionToTarget = 0;
+  private DutyCycleEncoder absoluteEncoder;
   private MotionMagicExpoVoltage mRequest = new MotionMagicExpoVoltage(0);
   private DutyCycleOut mCycleOut = new DutyCycleOut(0);
   private TalonFX moveToFloorTalonFX;
@@ -48,44 +49,61 @@ public class Intake extends SubsystemBase {
     encoderConstant = Constants.talonIntakeCon.ENCODER_STARTING_POSITION;
 
     encoderDownPos = Constants.talonIntakeCon.ENCODER_DOWN_POSITION;
+    /*
+     * our encoder get minus our constant which is starting position
+     * then absolute it to get a positive value
+     * then divide it by 0.095(found by testing)
+     * to get our position we want
+     */
+    moveToFloorTalonFX.setPosition(Math.abs(absoluteEncoder.get() - encoderConstant) / 0.095);
 
-    moveToFloorTalonFX.setPosition(Math.abs(absoluteEncoder.get() - encoderConstant) * 0.25);
-    // encoder total change is 0.7
-
-  
     startSpinning = new Trigger(() -> goalPos());
 
   }
-  private void setGoal(double x){
+
+  /**
+   * 
+   * @param x our goal target position to set (use encoder constants)
+   */
+  private void setGoal(double x) {
     goalPositionToTarget = x;
   }
-  private double getGoal(){
+
+  /**
+   * 
+   * @return our goal target position to get (in the encoder constants)
+   */
+  private double getGoal() {
     return goalPositionToTarget;
   }
+
   /**
-   * Position at bottom = 0.31 encoder
-   * Position at middle = 0.62 encoder
-   * Position at top = 0.93 encoder
    * 
-   * 
-   * 
+   * @return A sequentail command group so we set our goal pose then do our intake
+   *         down and spinning
    */
-  public Command intakeDown(){
-    
-    return new SequentialCommandGroup(new InstantCommand (()->setGoal(encoderDownPos)).andThen(intakeDownCommand()));
+  public Command intakeDown() {
+    return new SequentialCommandGroup(new InstantCommand(() -> setGoal(encoderDownPos)).andThen(intakeDownCommand()));
   }
-  public Command intakeUp(){
-    return new SequentialCommandGroup(new InstantCommand (()->setGoal(encoderConstant)).andThen(intakeUpCommand()));
+
+  /**
+   * 
+   * @return A sequentail command group so we set our goal pose then do our intake
+   *         up and stop spinning
+   */
+  public Command intakeUp() {
+    return new SequentialCommandGroup(new InstantCommand(() -> setGoal(encoderConstant)).andThen(intakeUpCommand()));
   }
+
   /**
    * 
    * @return A command in parallel to run our motors
    */
-  public Command intakeDownCommand() {
+  private Command intakeDownCommand() {
     /*
      * Test deadline v Parrellel
      */
-   
+
     return Commands.parallel(movingMotor(81), spinMotor(0.32));
   }
 
@@ -94,7 +112,7 @@ public class Intake extends SubsystemBase {
    * 
    * @return A command
    */
-  public Command intakeUpCommand() {
+  private Command intakeUpCommand() {
     // setGoal(encoderConstant);
     return Commands.parallel(movingMotor(0), spinMotor(0));
 
@@ -116,13 +134,17 @@ public class Intake extends SubsystemBase {
    * @return A functional command to move the motor with
    */
   private Command movingMotor(double goalAmount) {
-    
+
     return new FunctionalCommand(
-
+        () -> {
+        },
         () -> moveToFloorTalonFX.setControl(mRequest.withPosition(Units.degreesToRotations(goalAmount) * 26.64)),
-        () -> {},
 
-        startSpinning -> {if(startSpinning ==true){moveToFloorTalonFX.stopMotor();}},
+        startSpinning -> {
+          if (startSpinning == true) {
+            moveToFloorTalonFX.stopMotor();
+          }
+        },
         () -> goalPos(),
         this);
 
@@ -152,7 +174,7 @@ public class Intake extends SubsystemBase {
    * 
    * @return A Boolean to say if were near our goal pos
    */
-  public boolean goalPos() {
+  private boolean goalPos() {
 
     if (isNear(getGoal(), absoluteEncoder.get(), 0.03)) {
       return true;
