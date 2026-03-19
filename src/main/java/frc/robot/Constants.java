@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -36,17 +37,21 @@ public final class Constants {
   public class talonIntakeCon {
     public static int ENCODER_ID_CONSTANT = 0;
     
-    public static double ENCODER_DOWN_POSITION = 0.99;
-    public static double ENCODER_STARTING_POSITION = 0.67;
+    public static double ENCODER_DOWN_POSITION = 0.73;
+    public static double ENCODER_STARTING_POSITION = 0.38;
     public static int INTAKE_MOTOR_ID = 8;
     public static final TalonFXConfiguration SPIN_MOTOR_CONFIG = new TalonFXConfiguration();
     public static int SPIN_MOTOR_ID = 55;
     public static final TalonFXConfiguration INTAKE_MOTOR_CONFIG = new TalonFXConfiguration();
-    
+    private static final MotionMagicConfigs MAGIC_CONFIGS = new MotionMagicConfigs();
     // intake tooth is 16
     
     static {
+      // Find these values in Tuner maybe or look at examples
+      MAGIC_CONFIGS.MotionMagicCruiseVelocity = 512;
+      MAGIC_CONFIGS.MotionMagicJerk = 2;
       // in case forget intake motor up and down is kP of 6 kD of 0.005
+
       INTAKE_MOTOR_CONFIG.Slot0.kP = 2;
       INTAKE_MOTOR_CONFIG.Slot0.kI = 0;
       INTAKE_MOTOR_CONFIG.Slot0.kD = 0.03;

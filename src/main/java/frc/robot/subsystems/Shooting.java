@@ -22,6 +22,7 @@ public class Shooting extends SubsystemBase {
   TalonFX lowerShooter;
   DutyCycleOut mCycleOut;
   TalonFX indexShooter;
+
   public Shooting() {
     mCycleOut = new DutyCycleOut(0);
     upperShooter = new TalonFX(Constants.shooterMotorCon.upperShooter);
@@ -33,20 +34,28 @@ public class Shooting extends SubsystemBase {
     lowerShooter.setControl(new Follower(Constants.shooterMotorCon.upperShooter, MotorAlignmentValue.Opposed));
 
   }
+
   /**
    * A command to start shooting our balls
+   * 
    * @return a sequential command group with our commands
    */
-  private Command shootOut(){
-    return new SequentialCommandGroup(new InstantCommand(()-> upperShooter.setControl(mCycleOut.withOutput(1))).until(()->upperShooter.getDutyCycle().getValueAsDouble() >= 0.8).andThen(new InstantCommand(()->indexShooter.setControl(mCycleOut.withOutput(-1)))));
+  private Command shootOut() {
+    return new SequentialCommandGroup(new InstantCommand(() -> upperShooter.setControl(mCycleOut.withOutput(1)))
+        .until(() -> upperShooter.getDutyCycle().getValueAsDouble() >= 0.8)
+        .andThen(new InstantCommand(() -> indexShooter.setControl(mCycleOut.withOutput(-1)))));
   }
+
   /**
    * A command to stop shooting our balls
+   * 
    * @return a sequential command group with our commands
    */
-  private Command stopShooting(){
-    return new SequentialCommandGroup(new InstantCommand(()->upperShooter.setControl(mCycleOut.withOutput(0))).alongWith(new InstantCommand(()->indexShooter.setControl(mCycleOut.withOutput(0)))));
+  private Command stopShooting() {
+    return new SequentialCommandGroup(new InstantCommand(() -> upperShooter.setControl(mCycleOut.withOutput(0)))
+        .alongWith(new InstantCommand(() -> indexShooter.setControl(mCycleOut.withOutput(0)))));
   }
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run

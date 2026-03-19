@@ -14,17 +14,14 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.generated.Comp1TunerConstatnts;
-import frc.robot.subsystems.Aiming;
 import frc.robot.subsystems.Auto;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Intake;
-import frc.robot.subsystems.Vision;
-import frc.robot.subsystems.Shooting;
 public class RobotContainer {
     private double MaxSpeed = 1.0 * Comp1TunerConstatnts.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
                                                                                         // speed
@@ -45,7 +42,7 @@ public class RobotContainer {
     public final CommandSwerveDrivetrain drivetrainSubsystem = Comp1TunerConstatnts.createDrivetrain();
 
     //private final Vision visionSubsystem = new Vision(drivetrainSubsystem);
-     //private final Auto autoSubsystem = new Auto(drivetrainSubsystem,drive);
+private final Auto autoSubsystem = new Auto(drivetrainSubsystem,drive);
    //private final Aiming aimingSubsystem = new Aiming(drivetrainSubsystem, drive);
   private final Intake intakeSubsystem = new Intake();;
 
@@ -111,14 +108,14 @@ public class RobotContainer {
 
         
         drivetrainSubsystem.registerTelemetry(logger::telemeterize);
-        joystick.pov(0).onTrue(intakeSubsystem.intakeDownCommand());
-        joystick.pov(90).onTrue(intakeSubsystem.intakeUpCommand());
+        joystick.pov(0).onTrue(intakeSubsystem.intakeDown());
+        joystick.pov(90).onTrue(intakeSubsystem.intakeUp());
     }
 
     public Command getAutonomousCommand() {
         //return new SequentialCommandGroup(drivetrainSubsystem.applyRequest(()-> drive.withVelocityX(4)).withTimeout(1)).withTimeout(1).andThen(drivetrainSubsystem.applyRequest(()->drive.withVelocityY(-5)).withTimeout(2));
-        //return autoSubsystem.PickAutoToRun();
-         return null;
+        return Commands.runOnce(()->autoSubsystem.PickAutoToRun(),autoSubsystem);
+        
     }
 
 }

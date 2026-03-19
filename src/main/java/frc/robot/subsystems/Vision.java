@@ -13,8 +13,6 @@ import org.photonvision.PhotonPoseEstimator;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -44,7 +42,7 @@ public class Vision extends SubsystemBase {
     this.drivetrain = mCommandSwerveDrivetrain;
 
     camera = new PhotonCamera("frontFacingCamera");
-
+      
     listOfCameras.add(0, camera);
 
     robotToCam.add(0, camera1Pos);
@@ -64,7 +62,7 @@ public class Vision extends SubsystemBase {
     double dx = 0;
     double dy = 0;
     double dz = 0;
-    double dR = 0;
+    
     double size = 0;
     // iterating through our list of cameras
     for (int i = 0; i < listOfCameras.size(); i++) {
