@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Auto extends SubsystemBase {
@@ -40,7 +41,7 @@ public class Auto extends SubsystemBase {
   private ChassisSpeeds chassisSpeeds;
   public List<Translation2d> mList;
   public ArrayList<Translation2d> mArrayList = new ArrayList<>();
-
+  private boolean set;
   public Auto(CommandSwerveDrivetrain drivetrain, SwerveRequest.FieldCentric mCentric) {
     drivetrainAuto = drivetrain;
     drive = mCentric;
@@ -49,7 +50,7 @@ public class Auto extends SubsystemBase {
     // we can tune this some more when we are at arc field
     // this is for path of the auto from start to where we want to be
     ltvController = new LTVUnicycleController(VecBuilder.fill(0.0625, 0.125, 2.0), VecBuilder.fill(1.0, 2.0), 0.02, 9);
-
+    goalPose2d = new Pose2d();
   }
 
   /**
@@ -125,9 +126,9 @@ public class Auto extends SubsystemBase {
       rSpeed = 0;
     }
 
-    return Commands.repeatingSequence(drivetrainAuto.applyRequest(() -> drive.withVelocityX(-xSpeed)),
-        drivetrainAuto.applyRequest(() -> drive.withVelocityY(-ySpeed)),
-        drivetrainAuto.applyRequest(() -> drive.withRotationalRate(-rSpeed)));
+    return  drivetrainAuto.applyRequest(()->drive.withVelocityX(-mSpeeds.vxMetersPerSecond)).until(()->drivetrainAuto.getState().Pose.getX() >= goalPose2d.getX());
+     
+  
 
   }
 
@@ -146,14 +147,18 @@ public class Auto extends SubsystemBase {
   public Command PickAutoToRun() {
 
     // this.mList.add(new Translation2d(3.2,7.3));
-    goalPose2d = new Pose2d(8, 6, Rotation2d.fromDegrees(0));
-    ArrayList<Translation2d> nList = new ArrayList<>();
-    nList.add(new Translation2d(4, 4));
-    setWaypoints(nList);
+    setValues();
     return followAuto(mGenSpeeds(trejGen(currentPose2d, goalPose2d), ltvController));
 
   }
-
+  private void setValues(){
+    if(set == false){
+     goalPose2d = new Pose2d(currentPose2d.getX() + 2, currentPose2d.getY(), Rotation2d.fromDegrees(0));
+    ArrayList<Translation2d> nList = new ArrayList<>();
+    nList.add(new Translation2d(currentPose2d.getX() + 1, currentPose2d.getY()));
+    setWaypoints(nList);
+  set = true;}
+  }
   public void setWaypoints(ArrayList<Translation2d> nArrayList) {
     mInteriorPoints = nArrayList;
   }
@@ -168,9 +173,9 @@ public class Auto extends SubsystemBase {
    */
   private Boolean checking(Pose2d c, Pose2d g, char typeToCheck) {
     if (Character.compare(typeToCheck, 'x') == 0) {
-
-      if (Math.abs(c.getX()) > Math.abs(g.getX()) + 0.25) {
-
+     
+      if (c.getX() > g.getX()) {
+         SmartDashboard.putBoolean("type x", true);
         return true;
       }
     } else if (Character.compare(typeToCheck, 'y') == 0) {
@@ -189,6 +194,7 @@ public class Auto extends SubsystemBase {
   public void periodic() {
     // This method will be called once per scheduler run
     updatePose();
+    SmartDashboard.putNumber("goal x", goalPose2d.getX());
     // if (DriverStation.isAutonomous() && autoHasBeenPicked == true) {
     // followAuto(mGenSpeeds(trajectory, ltvController));
     // }

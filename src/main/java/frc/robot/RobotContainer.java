@@ -11,9 +11,12 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.generated.Comp1TunerConstatnts;
+import frc.robot.subsystems.Auto;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Intake;
 public class RobotContainer {
@@ -36,7 +39,7 @@ public class RobotContainer {
     public final CommandSwerveDrivetrain drivetrainSubsystem = Comp1TunerConstatnts.createDrivetrain();
 
     //private final Vision visionSubsystem = new Vision(drivetrainSubsystem);
-     //private final Auto autoSubsystem = new Auto(drivetrainSubsystem,drive);
+private final Auto autoSubsystem = new Auto(drivetrainSubsystem,drive);
    //private final Aiming aimingSubsystem = new Aiming(drivetrainSubsystem, drive);
   private final Intake intakeSubsystem = new Intake();;
 
@@ -108,8 +111,8 @@ public class RobotContainer {
 
     public Command getAutonomousCommand() {
         //return new SequentialCommandGroup(drivetrainSubsystem.applyRequest(()-> drive.withVelocityX(4)).withTimeout(1)).withTimeout(1).andThen(drivetrainSubsystem.applyRequest(()->drive.withVelocityY(-5)).withTimeout(2));
-        //return autoSubsystem.PickAutoToRun();
-         return null;
+        return Commands.runOnce(()->autoSubsystem.PickAutoToRun(),autoSubsystem);
+        
     }
 
 }
