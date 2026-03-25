@@ -37,8 +37,8 @@ public final class Constants {
   public class talonIntakeCon {
     public static int ENCODER_ID_CONSTANT = 0;
     
-    public static double ENCODER_DOWN_POSITION = 0.73;
-    public static double ENCODER_STARTING_POSITION = 0.38;
+    public static double ENCODER_DOWN_POSITION = 0.67;
+    public static double ENCODER_STARTING_POSITION = 0.32;
     public static int INTAKE_MOTOR_ID = 8;
     public static final TalonFXConfiguration SPIN_MOTOR_CONFIG = new TalonFXConfiguration();
     public static int SPIN_MOTOR_ID = 55;
@@ -63,6 +63,9 @@ public final class Constants {
     public static final TalonFXConfiguration UPPER_MOTOR_CONFIG= new TalonFXConfiguration();
     public static final TalonFXConfiguration LOWER_MOTOR_CONFIG = new TalonFXConfiguration();
     public static final TalonFXConfiguration INDEX_MOTOR_CONFIG = new TalonFXConfiguration();
+    //between -1 and 1
+    public static final double GOAL_SPEED_FOR_INDEX = 0.2;
+    public static final double GOAL_SPEED_FOR_UPPER = 0.7;
     public static final int lowerShooter = 6;
     public static final int upperShooter = 1;
     public static final int indexer = 3;

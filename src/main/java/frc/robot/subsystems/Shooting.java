@@ -11,9 +11,11 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
 
 public class Shooting extends SubsystemBase {
@@ -22,6 +24,10 @@ public class Shooting extends SubsystemBase {
   TalonFX lowerShooter;
   DutyCycleOut mCycleOut;
   TalonFX indexShooter;
+  Trigger startBottomMotor;
+  double goalSpeedForDutyCycleUpper;
+  double goalSpeedForDutyCycleIndexer;
+  
 
   public Shooting() {
     mCycleOut = new DutyCycleOut(0);
@@ -32,7 +38,19 @@ public class Shooting extends SubsystemBase {
     lowerShooter.getConfigurator().apply(Constants.shooterMotorCon.LOWER_MOTOR_CONFIG);
     indexShooter.getConfigurator().apply(Constants.shooterMotorCon.INDEX_MOTOR_CONFIG);
     lowerShooter.setControl(new Follower(Constants.shooterMotorCon.upperShooter, MotorAlignmentValue.Opposed));
+    goalSpeedForDutyCycleIndexer = Constants.shooterMotorCon.GOAL_SPEED_FOR_INDEX;
+    goalSpeedForDutyCycleUpper = Constants.shooterMotorCon.GOAL_SPEED_FOR_UPPER;
+    
+    startBottomMotor = new Trigger(() -> checkMotorSpeed());
 
+  }
+
+  public boolean checkMotorSpeed() {
+
+    if (upperShooter.getDutyCycle().getValueAsDouble() <= goalSpeedForDutyCycleUpper + goalSpeedForDutyCycleUpper * 0.05) {
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -40,10 +58,20 @@ public class Shooting extends SubsystemBase {
    * 
    * @return a sequential command group with our commands
    */
-  private Command shootOut() {
-    return new SequentialCommandGroup(new InstantCommand(() -> upperShooter.setControl(mCycleOut.withOutput(1)))
-        .until(() -> upperShooter.getDutyCycle().getValueAsDouble() >= 0.8)
-        .andThen(new InstantCommand(() -> indexShooter.setControl(mCycleOut.withOutput(-1)))));
+  public Command shootOut() {
+    return new FunctionalCommand(
+        () -> {
+        },
+        () -> upperShooter.setControl(mCycleOut.withOutput(-goalSpeedForDutyCycleUpper)),
+
+        startBottomMotor -> {
+          
+            
+            indexShooter.setControl(mCycleOut.withOutput(-goalSpeedForDutyCycleIndexer));
+          
+        },
+        startBottomMotor,
+        this);
   }
 
   /**
@@ -51,7 +79,7 @@ public class Shooting extends SubsystemBase {
    * 
    * @return a sequential command group with our commands
    */
-  private Command stopShooting() {
+  public Command stopShooting() {
     return new SequentialCommandGroup(new InstantCommand(() -> upperShooter.setControl(mCycleOut.withOutput(0)))
         .alongWith(new InstantCommand(() -> indexShooter.setControl(mCycleOut.withOutput(0)))));
   }
