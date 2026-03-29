@@ -15,13 +15,13 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.generated.Comp1TunerConstatnts;
 import frc.robot.subsystems.Auto;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.Shooting;
 public class RobotContainer {
     private double MaxSpeed = 1.0 * Comp1TunerConstatnts.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
                                                                                         // speed
@@ -42,11 +42,11 @@ public class RobotContainer {
     public final CommandSwerveDrivetrain drivetrainSubsystem = Comp1TunerConstatnts.createDrivetrain();
 
     //private final Vision visionSubsystem = new Vision(drivetrainSubsystem);
-private final Auto autoSubsystem = new Auto(drivetrainSubsystem,drive);
+     //   private final Auto autoSubsystem = new Auto(drivetrainSubsystem,drive);
    //private final Aiming aimingSubsystem = new Aiming(drivetrainSubsystem, drive);
   private final Intake intakeSubsystem = new Intake();;
 
-   //private final Shooting shooterSubsystem = new Shooting();
+   private final Shooting shooterSubsystem = new Shooting();
      
 
     public RobotContainer() {
@@ -108,14 +108,16 @@ private final Auto autoSubsystem = new Auto(drivetrainSubsystem,drive);
 
         
         drivetrainSubsystem.registerTelemetry(logger::telemeterize);
-        joystick.pov(0).onTrue(intakeSubsystem.intakeDown());
-        joystick.pov(90).onTrue(intakeSubsystem.intakeUp());
+         joystick.x().onTrue(intakeSubsystem.intakeDown());
+         joystick.pov(270).onTrue(intakeSubsystem.intakeUp());
+        joystick.pov(0).onTrue(shooterSubsystem.shootOut());
+        joystick.pov(90).onTrue(shooterSubsystem.stopShooting());
     }
 
     public Command getAutonomousCommand() {
         //return new SequentialCommandGroup(drivetrainSubsystem.applyRequest(()-> drive.withVelocityX(4)).withTimeout(1)).withTimeout(1).andThen(drivetrainSubsystem.applyRequest(()->drive.withVelocityY(-5)).withTimeout(2));
-        return Commands.runOnce(()->autoSubsystem.PickAutoToRun(),autoSubsystem);
-        
+      //  return autoSubsystem.PickAutoToRun();
+        return null;
     }
 
 }
