@@ -7,10 +7,15 @@ package frc.robot;
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.auto.NamedCommands;
-import com.pathplanner.lib.commands.FollowPathCommand;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+
+import com.pathplanner.lib.auto.AutoBuilder;
+//import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.FollowPathCommand;
+
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -22,6 +27,7 @@ import frc.robot.subsystems.Auto;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Shooting;
+
 public class RobotContainer {
     private double MaxSpeed = 1.0 * Comp1TunerConstatnts.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
                                                                                         // speed
@@ -41,6 +47,9 @@ public class RobotContainer {
 
     public final CommandSwerveDrivetrain drivetrainSubsystem = Comp1TunerConstatnts.createDrivetrain();
 
+    /* Path follower */
+    private final SendableChooser<Command> autoChooser;
+
     //private final Vision visionSubsystem = new Vision(drivetrainSubsystem);
      //   private final Auto autoSubsystem = new Auto(drivetrainSubsystem,drive);
    //private final Aiming aimingSubsystem = new Aiming(drivetrainSubsystem, drive);
@@ -56,7 +65,14 @@ public class RobotContainer {
          //NamedCommands.registerCommand("shoot", shooterSubsysem.shootOutWithVelocity());
         // SmartDashboard.putBoolean("testingpleasework", NamedCommands.hasCommand("shoot"));
         // NamedCommands.registerCommand("IntakeDown",intakeSubsystem.goToDownPositionCommand());
+       
+        autoChooser = AutoBuilder.buildAutoChooser("Tests");
+        SmartDashboard.putData("Auto Mode", autoChooser);
+
         configureBindings();
+
+         // Warmup PathPlanner to avoid Java pauses
+        CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
 
         // autoChooser.setDefaultOption("Left", AutoBuilder.buildAuto("left"));
         // autoChooser.addOption("Right", AutoBuilder.buildAuto("right"));
@@ -110,14 +126,17 @@ public class RobotContainer {
         drivetrainSubsystem.registerTelemetry(logger::telemeterize);
          joystick.x().onTrue(intakeSubsystem.intakeDown());
          joystick.pov(270).onTrue(intakeSubsystem.intakeUp());
-        joystick.pov(0).onTrue(shooterSubsystem.shootOut());
-        joystick.pov(90).onTrue(shooterSubsystem.stopShooting());
+       // joystick.pov(0).onTrue(shooterSubsystem.shootOut());
+       // joystick.pov(90).onTrue(shooterSubsystem.stopShooting());
     }
 
     public Command getAutonomousCommand() {
         //return new SequentialCommandGroup(drivetrainSubsystem.applyRequest(()-> drive.withVelocityX(4)).withTimeout(1)).withTimeout(1).andThen(drivetrainSubsystem.applyRequest(()->drive.withVelocityY(-5)).withTimeout(2));
       //  return autoSubsystem.PickAutoToRun();
-        return null;
+
+
+        /* Run the path selected from the auto chooser */
+        return autoChooser.getSelected();
     }
 
 }
